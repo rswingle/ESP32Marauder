@@ -224,6 +224,56 @@ uint32_t currentTime  = 0;
   SDInterface sd_obj = SDInterface(&sharedSPI, SD_CS);
 #endif
 
+// ─── Emergency SD recovery ────────────────────────────────────────────────────
+// Place the official firmware .bin on the SD card root named "recovery.bin".
+// On next boot, if this file is found, it is flashed immediately via OTA and the
+// device reboots into the new firmware.  The file is renamed to
+// "recovery.bin.applied" before flashing so a subsequent boot won't re-trigger.
+// ─────────────────────────────────────────────────────────────────────────────
+#if defined(HAS_SD)
+void checkSDRecovery() {
+  if (!sd_obj.supported) return;
+  if (!SD.exists("/recovery.bin")) return;
+
+  // Rename before flashing so a partial failure doesn't cause a boot loop.
+  // runUpdate() receives the renamed path; if rename fails we fall back to the
+  // original name and accept that the user may need to remove it manually.
+  bool renamed = SD.rename("/recovery.bin", "/recovery.bin.applied");
+  const char* update_path = renamed ? "/recovery.bin.applied" : "/recovery.bin";
+
+  Serial.println(F("\n[RECOVERY] recovery.bin found on SD card."));
+  Serial.println(F("[RECOVERY] Flashing firmware now — do NOT power off."));
+
+  #ifdef HAS_SCREEN
+    display_obj.tft.fillScreen(TFT_BLACK);
+
+    display_obj.tft.setTextSize(2);
+    display_obj.tft.setTextColor(TFT_RED, TFT_BLACK);
+    display_obj.tft.drawCentreString("! RECOVERY MODE !", TFT_WIDTH / 2, (int)(TFT_HEIGHT * 0.12), 1);
+
+    display_obj.tft.setTextSize(1);
+    display_obj.tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    display_obj.tft.drawCentreString("recovery.bin found on SD card", TFT_WIDTH / 2, (int)(TFT_HEIGHT * 0.38), 1);
+    display_obj.tft.drawCentreString("Flashing firmware...", TFT_WIDTH / 2, (int)(TFT_HEIGHT * 0.52), 1);
+
+    display_obj.tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+    display_obj.tft.drawCentreString("DO NOT REMOVE SD OR POWER OFF", TFT_WIDTH / 2, (int)(TFT_HEIGHT * 0.72), 1);
+  #endif
+
+  // runUpdate() prints progress, flashes, and calls ESP.restart() on success.
+  // If we return here, flashing failed — continue normal boot so device still works.
+  sd_obj.runUpdate(update_path);
+
+  Serial.println(F("[RECOVERY] Flash FAILED — continuing normal boot."));
+  #ifdef HAS_SCREEN
+    display_obj.tft.setTextSize(1);
+    display_obj.tft.setTextColor(TFT_RED, TFT_BLACK);
+    display_obj.tft.drawCentreString("FLASH FAILED - see serial (115200)", TFT_WIDTH / 2, (int)(TFT_HEIGHT * 0.88), 1);
+  #endif
+  delay(3000);
+}
+#endif
+
 void setup()
 {
   randomSeed(esp_random());
@@ -353,6 +403,8 @@ void setup()
       // Do some SD stuff
       if(!sd_obj.initSD())
         Serial.println(F("SD Card NOT Supported"));
+      else
+        checkSDRecovery();
 
     #endif
   #endif
