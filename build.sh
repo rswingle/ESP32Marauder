@@ -4,6 +4,8 @@
 # Example: ./build.sh v6
 #          ./build.sh cardputer
 #          ./build.sh          (lists all targets)
+#
+# Compatible with Bash 3.x (macOS default).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -12,51 +14,164 @@ LIBS_DIR="${ARDUINO_LIBRARIES:-$HOME/Arduino/libraries}"
 PLATFORM_BASE="$HOME/.arduino15/packages/esp32/hardware/esp32"
 TFT_DIR="$LIBS_DIR/TFT_eSPI"
 
-# ─── Target table ─────────────────────────────────────────────────────────────
-# Fields: fqbn | flag | idf_ver | tft_file
-declare -A FQBN FLAG IDF_VER TFT_FILE
-
-add_target() {
-  local key="$1" fqbn="$2" flag="$3" idf="$4" tft="$5"
-  FQBN[$key]="$fqbn"; FLAG[$key]="$flag"; IDF_VER[$key]="$idf"; TFT_FILE[$key]="$tft"
-}
-
-add_target v4           "esp32:esp32:d32:PartitionScheme=min_spiffs"                                          MARAUDER_V4              3.3.4  User_Setup_og_marauder.h
-add_target v6           "esp32:esp32:d32:PartitionScheme=min_spiffs"                                          MARAUDER_V6              3.3.4  User_Setup_og_marauder.h
-add_target v6_1         "esp32:esp32:d32:PartitionScheme=min_spiffs"                                          MARAUDER_V6_1            3.3.4  User_Setup_og_marauder.h
-add_target v7           "esp32:esp32:d32:PartitionScheme=min_spiffs"                                          MARAUDER_V7              3.3.4  User_Setup_dual_nrf24.h
-add_target kit          "esp32:esp32:d32:PartitionScheme=min_spiffs"                                          MARAUDER_KIT             3.3.4  User_Setup_og_marauder.h
-add_target mini         "esp32:esp32:d32:PartitionScheme=min_spiffs"                                          MARAUDER_MINI            3.3.4  User_Setup_marauder_mini.h
-add_target lddb         "esp32:esp32:d32:PartitionScheme=min_spiffs"                                          ESP32_LDDB               3.3.4  ""
-add_target dev_pro      "esp32:esp32:d32:PartitionScheme=min_spiffs"                                          MARAUDER_DEV_BOARD_PRO   3.3.4  ""
-add_target flipper      "esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled"           MARAUDER_FLIPPER         2.0.11 ""
-add_target multiboard_s3 "esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=4M"                        MARAUDER_MULTIBOARD_S3   2.0.11 ""
-add_target rev_feather  "esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled"           MARAUDER_REV_FEATHER     2.0.11 User_Setup_marauder_rev_feather.h
-add_target m5stickc     "esp32:esp32:m5stick-c:PartitionScheme=min_spiffs"                                    MARAUDER_M5STICKC        2.0.11 User_Setup_marauder_m5stickc.h
-add_target m5stickcplus2 "esp32:esp32:m5stick-c:PartitionScheme=min_spiffs"                                   MARAUDER_M5STICKCP2      2.0.11 User_Setup_marauder_m5stickcp2.h
-add_target cardputer    "esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=8M,PSRAM=disabled"          MARAUDER_CARDPUTER       2.0.11 User_Setup_marauder_m5cardputer.h
-add_target cyd_micro    "esp32:esp32:d32:PartitionScheme=min_spiffs"                                          MARAUDER_CYD_MICRO       2.0.11 User_Setup_cyd_micro.h
-add_target cyd_guition  "esp32:esp32:d32:PartitionScheme=min_spiffs"                                          MARAUDER_CYD_GUITION     2.0.11 User_Setup_cyd_guition.h
-add_target cyd_2usb     "esp32:esp32:d32:PartitionScheme=min_spiffs"                                          MARAUDER_CYD_2USB        3.3.4  User_Setup_cyd_2usb.h
-add_target cyd_3_5      "esp32:esp32:d32:PartitionScheme=min_spiffs"                                          MARAUDER_CYD_3_5_INCH    2.0.11 User_Setup_cyd_3_5_inch.h
-add_target c5           "esp32:esp32:esp32c5:FlashSize=8M,PartitionScheme=min_spiffs,PSRAM=enabled"           MARAUDER_C5              3.3.4  ""
-
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 info()  { echo "[build] $*"; }
 warn()  { echo "[warn]  $*" >&2; }
 die()   { echo "[error] $*" >&2; exit 1; }
 
+# ─── Target table (Bash 3.x compatible — no associative arrays) ───────────────
+# Sets TARGET_FQBN, TARGET_FLAG, TARGET_IDF, TARGET_TFT for a given target name.
+# Returns 1 for unknown targets.
+get_target_params() {
+  local target="$1"
+  case "$target" in
+    v4)
+      TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
+      TARGET_FLAG="MARAUDER_V4"
+      TARGET_IDF="3.3.4"
+      TARGET_TFT="User_Setup_og_marauder.h"
+      ;;
+    v6)
+      TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
+      TARGET_FLAG="MARAUDER_V6"
+      TARGET_IDF="3.3.4"
+      TARGET_TFT="User_Setup_og_marauder.h"
+      ;;
+    v6_1)
+      TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
+      TARGET_FLAG="MARAUDER_V6_1"
+      TARGET_IDF="3.3.4"
+      TARGET_TFT="User_Setup_og_marauder.h"
+      ;;
+    v7)
+      TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
+      TARGET_FLAG="MARAUDER_V7"
+      TARGET_IDF="3.3.4"
+      TARGET_TFT="User_Setup_dual_nrf24.h"
+      ;;
+    kit)
+      TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
+      TARGET_FLAG="MARAUDER_KIT"
+      TARGET_IDF="3.3.4"
+      TARGET_TFT="User_Setup_og_marauder.h"
+      ;;
+    mini)
+      TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
+      TARGET_FLAG="MARAUDER_MINI"
+      TARGET_IDF="3.3.4"
+      TARGET_TFT="User_Setup_marauder_mini.h"
+      ;;
+    lddb)
+      TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
+      TARGET_FLAG="ESP32_LDDB"
+      TARGET_IDF="3.3.4"
+      TARGET_TFT=""
+      ;;
+    dev_pro)
+      TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
+      TARGET_FLAG="MARAUDER_DEV_BOARD_PRO"
+      TARGET_IDF="3.3.4"
+      TARGET_TFT=""
+      ;;
+    flipper)
+      TARGET_FQBN="esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled"
+      TARGET_FLAG="MARAUDER_FLIPPER"
+      TARGET_IDF="2.0.11"
+      TARGET_TFT=""
+      ;;
+    multiboard_s3)
+      TARGET_FQBN="esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=4M"
+      TARGET_FLAG="MARAUDER_MULTIBOARD_S3"
+      TARGET_IDF="2.0.11"
+      TARGET_TFT=""
+      ;;
+    rev_feather)
+      TARGET_FQBN="esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled"
+      TARGET_FLAG="MARAUDER_REV_FEATHER"
+      TARGET_IDF="2.0.11"
+      TARGET_TFT="User_Setup_marauder_rev_feather.h"
+      ;;
+    m5stickc)
+      TARGET_FQBN="esp32:esp32:m5stick-c:PartitionScheme=min_spiffs"
+      TARGET_FLAG="MARAUDER_M5STICKC"
+      TARGET_IDF="2.0.11"
+      TARGET_TFT="User_Setup_marauder_m5stickc.h"
+      ;;
+    m5stickcplus2)
+      TARGET_FQBN="esp32:esp32:m5stick-c:PartitionScheme=min_spiffs"
+      TARGET_FLAG="MARAUDER_M5STICKCP2"
+      TARGET_IDF="2.0.11"
+      TARGET_TFT="User_Setup_marauder_m5stickcp2.h"
+      ;;
+    cardputer)
+      TARGET_FQBN="esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=8M,PSRAM=disabled"
+      TARGET_FLAG="MARAUDER_CARDPUTER"
+      TARGET_IDF="2.0.11"
+      TARGET_TFT="User_Setup_marauder_m5cardputer.h"
+      ;;
+    cyd_micro)
+      TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
+      TARGET_FLAG="MARAUDER_CYD_MICRO"
+      TARGET_IDF="2.0.11"
+      TARGET_TFT="User_Setup_cyd_micro.h"
+      ;;
+    cyd_guition)
+      TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
+      TARGET_FLAG="MARAUDER_CYD_GUITION"
+      TARGET_IDF="2.0.11"
+      TARGET_TFT="User_Setup_cyd_guition.h"
+      ;;
+    cyd_2usb)
+      TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
+      TARGET_FLAG="MARAUDER_CYD_2USB"
+      TARGET_IDF="3.3.4"
+      TARGET_TFT="User_Setup_cyd_2usb.h"
+      ;;
+    cyd_3_5)
+      TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
+      TARGET_FLAG="MARAUDER_CYD_3_5_INCH"
+      TARGET_IDF="2.0.11"
+      TARGET_TFT="User_Setup_cyd_3_5_inch.h"
+      ;;
+    c5)
+      TARGET_FQBN="esp32:esp32:esp32c5:FlashSize=8M,PartitionScheme=min_spiffs,PSRAM=enabled"
+      TARGET_FLAG="MARAUDER_C5"
+      TARGET_IDF="3.3.4"
+      TARGET_TFT=""
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 list_targets() {
   echo "Available targets:"
-  for key in $(echo "${!FQBN[@]}" | tr ' ' '\n' | sort); do
-    printf "  %-18s  %s\n" "$key" "${FLAG[$key]}"
-  done
+  printf "  %-18s  %s\n" "v4"           "MARAUDER_V4              (IDF 3.3.4)"
+  printf "  %-18s  %s\n" "v6"           "MARAUDER_V6              (IDF 3.3.4)  <-- most common"
+  printf "  %-18s  %s\n" "v6_1"         "MARAUDER_V6_1            (IDF 3.3.4)"
+  printf "  %-18s  %s\n" "v7"           "MARAUDER_V7              (IDF 3.3.4)"
+  printf "  %-18s  %s\n" "kit"          "MARAUDER_KIT             (IDF 3.3.4)"
+  printf "  %-18s  %s\n" "mini"         "MARAUDER_MINI            (IDF 3.3.4)"
+  printf "  %-18s  %s\n" "lddb"         "ESP32_LDDB               (IDF 3.3.4)"
+  printf "  %-18s  %s\n" "dev_pro"      "MARAUDER_DEV_BOARD_PRO   (IDF 3.3.4)"
+  printf "  %-18s  %s\n" "flipper"      "MARAUDER_FLIPPER         (IDF 2.0.11)"
+  printf "  %-18s  %s\n" "multiboard_s3" "MARAUDER_MULTIBOARD_S3  (IDF 2.0.11)"
+  printf "  %-18s  %s\n" "rev_feather"  "MARAUDER_REV_FEATHER     (IDF 2.0.11)"
+  printf "  %-18s  %s\n" "m5stickc"     "MARAUDER_M5STICKC        (IDF 2.0.11)"
+  printf "  %-18s  %s\n" "m5stickcplus2" "MARAUDER_M5STICKCP2     (IDF 2.0.11)"
+  printf "  %-18s  %s\n" "cardputer"    "MARAUDER_CARDPUTER       (IDF 2.0.11)"
+  printf "  %-18s  %s\n" "cyd_micro"    "MARAUDER_CYD_MICRO       (IDF 2.0.11)"
+  printf "  %-18s  %s\n" "cyd_guition"  "MARAUDER_CYD_GUITION     (IDF 2.0.11)"
+  printf "  %-18s  %s\n" "cyd_2usb"     "MARAUDER_CYD_2USB        (IDF 3.3.4)"
+  printf "  %-18s  %s\n" "cyd_3_5"      "MARAUDER_CYD_3_5_INCH    (IDF 2.0.11)"
+  printf "  %-18s  %s\n" "c5"           "MARAUDER_C5              (IDF 3.3.4)"
 }
 
 # ─── Prerequisite checks ──────────────────────────────────────────────────────
 check_deps() {
   if ! command -v arduino-cli &>/dev/null; then
-    die "arduino-cli not found. Install with: brew install arduino-cli  (or download from https://arduino.cc/en/software#arduino-cli)"
+    die "arduino-cli not found. Install with: brew install arduino-cli"
   fi
 }
 
@@ -71,10 +186,8 @@ ensure_core() {
   fi
 
   info "Installing ESP32 core ${idf_ver}..."
-  arduino-cli core update-index \
-    --additional-urls "$platform_url"
-  arduino-cli core install "esp32:esp32@${idf_ver}" \
-    --additional-urls "$platform_url"
+  arduino-cli core update-index --additional-urls "$platform_url"
+  arduino-cli core install "esp32:esp32@${idf_ver}" --additional-urls "$platform_url"
 }
 
 # ─── Library install (git clone into ~/Arduino/libraries) ─────────────────────
@@ -113,20 +226,18 @@ install_libs() {
 # ─── TFT_eSPI configuration ───────────────────────────────────────────────────
 configure_tft() {
   local tft_file="$1"
-  [[ -z "$tft_file" ]] && return  # no display, nothing to do
+  [[ -z "$tft_file" ]] && return  # headless target, nothing to do
 
   [[ -d "$TFT_DIR" ]] || die "TFT_eSPI not found at $TFT_DIR — run library install first."
 
-  # Copy all User_Setup_*.h files from repo root into TFT_eSPI dir
   info "Copying User_Setup files into TFT_eSPI..."
   cp "$SCRIPT_DIR"/User_Setup_*.h "$TFT_DIR/"
 
-  # Activate the correct setup file in User_Setup_Select.h
   local select_file="$TFT_DIR/User_Setup_Select.h"
   [[ -f "$select_file" ]] || die "User_Setup_Select.h not found in $TFT_DIR"
 
-  # Comment out all existing active #include lines, then uncomment the right one
-  # macOS sed requires '' as the backup extension
+  # Comment out all active #include lines, then uncomment the target one.
+  # macOS sed requires an explicit (empty) backup extension with -i.
   sed -i.bak 's|^#include <User_Setup|//#include <User_Setup|g' "$select_file"
   sed -i.bak "s|^//#include <${tft_file}>|#include <${tft_file}>|" "$select_file"
 
@@ -141,24 +252,24 @@ configure_tft() {
 apply_zmuldefs() {
   local idf_ver="$1"
   local platform_dir="$PLATFORM_BASE/$idf_ver"
-  [[ -d "$platform_dir" ]] || { warn "Platform dir not found: $platform_dir"; return; }
+  [[ -d "$platform_dir" ]] || { warn "Platform dir not found: $platform_dir (skip zmuldefs)"; return; }
 
   local platform_txt
   platform_txt="$(find "$platform_dir" -maxdepth 1 -name platform.txt | head -1)"
-  [[ -f "$platform_txt" ]] || { warn "platform.txt not found under $platform_dir"; return; }
+  [[ -f "$platform_txt" ]] || { warn "platform.txt not found (skip zmuldefs)"; return; }
 
   if [[ "$idf_ver" == "3.3.4" ]]; then
     if grep -q "\-Wl,-zmuldefs" "$platform_txt"; then
-      info "zmuldefs patch already applied to $platform_txt"
+      info "zmuldefs patch already applied."
     else
-      info "Applying zmuldefs patch to $platform_txt..."
+      info "Applying zmuldefs patch to platform.txt..."
       sed -i.bak 's/compiler.c.elf.extra_flags=/compiler.c.elf.extra_flags=-Wl,-zmuldefs /' "$platform_txt"
     fi
   elif [[ "$idf_ver" == "2.0.11" ]]; then
     if grep -q "\-zmuldefs" "$platform_txt"; then
-      info "zmuldefs patch already applied to $platform_txt"
+      info "zmuldefs patch already applied."
     else
-      info "Applying zmuldefs patch (2.0.11) to $platform_txt..."
+      info "Applying zmuldefs patch (2.0.11) to platform.txt..."
       for field in compiler.c.elf.libs.esp32c3 compiler.c.elf.libs.esp32s3 \
                    compiler.c.elf.libs.esp32s2 compiler.c.elf.libs.esp32; do
         sed -i.bak "s/${field}=/${field}=-zmuldefs /" "$platform_txt"
@@ -170,36 +281,38 @@ apply_zmuldefs() {
 # ─── Build ────────────────────────────────────────────────────────────────────
 build() {
   local target="$1"
-  local fqbn="${FQBN[$target]}"
-  local flag="${FLAG[$target]}"
-  local idf_ver="${IDF_VER[$target]}"
-  local tft_file="${TFT_FILE[$target]}"
-  local nimble_ver
-  nimble_ver="$([ "$idf_ver" = "3.3.4" ] && echo "2.3.8" || echo "1.3.8")"
 
-  info "Target:    $target ($flag)"
-  info "FQBN:      $fqbn"
-  info "IDF:       $idf_ver  NimBLE: $nimble_ver"
-  info "TFT file:  ${tft_file:-none}"
+  get_target_params "$target"  # sets TARGET_FQBN TARGET_FLAG TARGET_IDF TARGET_TFT
+
+  local nimble_ver
+  if [[ "$TARGET_IDF" == "3.3.4" ]]; then
+    nimble_ver="2.3.8"
+  else
+    nimble_ver="1.3.8"
+  fi
+
+  info "Target:    $target ($TARGET_FLAG)"
+  info "FQBN:      $TARGET_FQBN"
+  info "IDF:       $TARGET_IDF  NimBLE: $nimble_ver"
+  info "TFT file:  ${TARGET_TFT:-none}"
   echo ""
 
-  ensure_core "$idf_ver"
+  ensure_core "$TARGET_IDF"
   install_libs "$nimble_ver"
-  configure_tft "$tft_file"
-  apply_zmuldefs "$idf_ver"
+  configure_tft "$TARGET_TFT"
+  apply_zmuldefs "$TARGET_IDF"
 
   info "Building..."
   arduino-cli compile \
-    --fqbn "$fqbn" \
+    --fqbn "$TARGET_FQBN" \
     --libraries "$LIBS_DIR" \
-    --build-property "compiler.cpp.extra_flags='-D${flag}'" \
+    --build-property "compiler.cpp.extra_flags='-D${TARGET_FLAG}'" \
     --warnings none \
     "$SKETCH"
 
-  # Report output binary location
-  # arduino-cli places build output under the sketch dir in build/<board>/
+  # arduino-cli places output under sketch/build/<board>/
   local board_short
-  board_short="$(echo "$fqbn" | cut -d: -f3 | cut -d: -f1)"
+  board_short="$(echo "$TARGET_FQBN" | cut -d: -f3 | cut -d: -f1)"
   local build_dir="$SCRIPT_DIR/esp32_marauder/build/esp32.esp32.${board_short}"
   local bin="$build_dir/esp32_marauder.ino.bin"
 
@@ -226,8 +339,11 @@ main() {
   fi
 
   local target="$1"
-  if [[ -z "${FQBN[$target]+x}" ]]; then
-    die "Unknown target: '$target'"$'\n'"$(list_targets)"
+  if ! get_target_params "$target" 2>/dev/null; then
+    echo "[error] Unknown target: '$target'" >&2
+    echo "" >&2
+    list_targets >&2
+    exit 1
   fi
 
   build "$target"
