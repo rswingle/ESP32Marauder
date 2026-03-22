@@ -2723,16 +2723,18 @@ void MenuFunctions::RunSetup()
         this->changeMenu(&sdDeleteMenu, true);
       });
 
-      sdViewMenu.parentMenu = &deviceMenu;
-      this->addNodes(&deviceMenu, "View SD Files", TFTGREEN, NULL, SD_UPDATE, [this]() {
-        display_obj.clearScreen();
-        display_obj.tft.setTextWrap(false);
-        display_obj.tft.setCursor(0, SCREEN_HEIGHT / 3);
-        display_obj.tft.setTextColor(TFT_GREEN, TFT_BLACK);
-        display_obj.tft.println("Loading...");
-        this->buildSDViewMenu();
-        this->changeMenu(&sdViewMenu, true);
-      });
+      #ifdef HAS_ILI9341
+        sdViewMenu.parentMenu = &deviceMenu;
+        this->addNodes(&deviceMenu, "View SD Files", TFTGREEN, NULL, SD_UPDATE, [this]() {
+          display_obj.clearScreen();
+          display_obj.tft.setTextWrap(false);
+          display_obj.tft.setCursor(0, SCREEN_HEIGHT / 3);
+          display_obj.tft.setTextColor(TFT_GREEN, TFT_BLACK);
+          display_obj.tft.println("Loading...");
+          this->buildSDViewMenu();
+          this->changeMenu(&sdViewMenu, true);
+        });
+      #endif
     }
   #endif
 
