@@ -8,7 +8,7 @@ extern Display display_obj;
 
 // Keyboard will occupy the bottom half of the screen.
 static inline int16_t kbHeight() {
-  return TFT_HEIGHT / 2;
+  return (TFT_HEIGHT * 3) / 4;
 }
 static inline int16_t kbYStart() {
   return TFT_HEIGHT - kbHeight();
@@ -89,6 +89,7 @@ static void drawKeyboard(KeyboardLayout layout, bool caps) {
                            : (const char **)rowStringsSym;
 
   // Draw normal character rows (0–3)
+  display_obj.tft.setTextSize(2);
   for (int r = 0; r < 4; ++r) {
     const char *row = rowsPtr[r];
 
@@ -117,8 +118,8 @@ static void drawKeyboard(KeyboardLayout layout, bool caps) {
       // Key border
       display_obj.tft.drawRect(keyX, keyY, cellW, cellH, TFT_BLACK);
 
-      // Label
-      display_obj.tft.setCursor(keyX + cellW / 2 - 3, keyY + cellH / 2 - 4);
+      // Label (text size 2: 12×16px per char; center in cell)
+      display_obj.tft.setCursor(keyX + cellW / 2 - 6, keyY + cellH / 2 - 8);
       char c = row[i];
 
       // Apply CAPS on alpha letters
@@ -140,7 +141,8 @@ static void drawKeyboard(KeyboardLayout layout, bool caps) {
       int16_t capsW = 2 * cellW;
 
       display_obj.tft.drawRect(capsX, rowY, capsW, cellH, TFT_BLACK);
-      display_obj.tft.setCursor(capsX + 4, rowY + cellH / 2 - 4);
+      // "CAPS"/"caps" = 4 chars × 12px = 48px; cell = 64px; offset = (64-48)/2 = 8
+      display_obj.tft.setCursor(capsX + 8, rowY + cellH / 2 - 8);
       // Show different label based on state
       if (caps) {
         display_obj.tft.print("caps");
@@ -149,6 +151,7 @@ static void drawKeyboard(KeyboardLayout layout, bool caps) {
       }
     }
   }
+  display_obj.tft.setTextSize(1);
 
   // Special row (row index 4): CANCEL | SYMB/ABC | SPACE | BKSP | OK
   int r = 4;

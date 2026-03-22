@@ -460,148 +460,140 @@ void MenuFunctions::main(uint32_t currentTime)
         }
       }*/
 
-      // Detect up, down, select
-      uint8_t menu_button = display_obj.menuButton(&t_x, &t_y, pressed);
+      // Direct tap activates the item under the finger; swipe scrolls the list.
+      // For active scan/monitor states the 3-zone buttons still handle channel navigation.
+      if ((wifi_scan_obj.currentScanMode == WIFI_SCAN_OFF) ||
+          (wifi_scan_obj.currentScanMode == WIFI_CONNECTED) ||
+          (wifi_scan_obj.currentScanMode == OTA_UPDATE) ||
+          (wifi_scan_obj.currentScanMode == SHOW_INFO) ||
+          (wifi_scan_obj.currentScanMode == WIFI_SCAN_GPS_DATA) ||
+          (wifi_scan_obj.currentScanMode == GPS_POI) ||
+          (wifi_scan_obj.currentScanMode == GPS_TRACKER) ||
+          (wifi_scan_obj.currentScanMode == WIFI_SCAN_GPS_NMEA)) {
 
-      if (menu_button > -1) {
-        if (menu_button == UP_BUTTON) {
-          if ((wifi_scan_obj.currentScanMode == WIFI_SCAN_OFF) ||
-              (wifi_scan_obj.currentScanMode == WIFI_CONNECTED) ||
-              (wifi_scan_obj.currentScanMode == OTA_UPDATE)) {
-            if (current_menu->selected > 0) {
-              current_menu->selected--;
-              // Page up
-              if (current_menu->selected < this->menu_start_index) {
-                this->buildButtons(current_menu, current_menu->selected);
-                this->displayCurrentMenu(current_menu->selected);
-              }
-              this->buttonSelected(current_menu->selected - this->menu_start_index, current_menu->selected);
-              if (!current_menu->list->get(current_menu->selected + 1).selected)
-                this->buttonNotSelected(current_menu->selected + 1 - this->menu_start_index, current_menu->selected + 1);
-            }
-            // Loop to end
-            else {
-              current_menu->selected = current_menu->list->size() - 1;
-              if (current_menu->selected >= BUTTON_SCREEN_LIMIT) {
-                this->buildButtons(current_menu, current_menu->selected + 1 - BUTTON_SCREEN_LIMIT);
-                this->displayCurrentMenu(current_menu->selected + 1 - BUTTON_SCREEN_LIMIT);
-              }
-              this->buttonSelected(current_menu->selected, current_menu->selected);
-              if (!current_menu->list->get(0).selected)
-                this->buttonNotSelected(0, this->menu_start_index);
-            }
-          }
-          else if ((wifi_scan_obj.currentScanMode == WIFI_PACKET_MONITOR) ||
-                  (wifi_scan_obj.currentScanMode == WIFI_SCAN_EAPOL) ||
-                  (wifi_scan_obj.currentScanMode == WIFI_SCAN_CHAN_ANALYZER) ||
-                  (wifi_scan_obj.currentScanMode == WIFI_SCAN_PACKET_RATE) ||
-                  (wifi_scan_obj.currentScanMode == WIFI_SCAN_RAW_CAPTURE) ||
-                  (wifi_scan_obj.currentScanMode == WIFI_SCAN_AP) ||
-                  (wifi_scan_obj.currentScanMode == WIFI_SCAN_PROBE) ||
-                  (wifi_scan_obj.currentScanMode == WIFI_SCAN_DEAUTH) ||
-                  (wifi_scan_obj.currentScanMode == WIFI_SCAN_SIG_STREN)) {
-            #ifndef HAS_DUAL_BAND
-              if (wifi_scan_obj.set_channel < 14)
-                wifi_scan_obj.changeChannel(wifi_scan_obj.set_channel + 1);
-              else
-                wifi_scan_obj.changeChannel(1);
-            #else
-              if (wifi_scan_obj.dual_band_channel_index < DUAL_BAND_CHANNELS - 1)
-                wifi_scan_obj.dual_band_channel_index++;
-              else
-                wifi_scan_obj.dual_band_channel_index = 0;
+        // Static state persists between loop() calls for swipe detection
+        static bool _t_was_pressed = false;
+        static uint16_t _t_start_x = 0, _t_start_y = 0, _t_last_y = 0;
 
-              wifi_scan_obj.changeChannel(wifi_scan_obj.dual_band_channels[wifi_scan_obj.dual_band_channel_index]);
-            #endif
+        if (pressed) {
+          if (!_t_was_pressed) {
+            _t_start_x = t_x;
+            _t_start_y = t_y;
+            _t_last_y  = t_y;
+          } else {
+            _t_last_y = t_y;
           }
-          else if (wifi_scan_obj.currentScanMode == WIFI_SCAN_CHAN_ACT) {
-            #ifndef HAS_DUAL_BAND
-              if (wifi_scan_obj.activity_page < MAX_CHANNEL / CHAN_PER_PAGE) {
-                wifi_scan_obj.activity_page++;
-              }
-            #else
-              if (wifi_scan_obj.activity_page < DUAL_BAND_CHANNELS / CHAN_PER_PAGE) {
-                wifi_scan_obj.activity_page++;
-              }
-            #endif
-            wifi_scan_obj.drawChannelLine();
-          }
-        }
-        if (menu_button == DOWN_BUTTON) {
-          if ((wifi_scan_obj.currentScanMode == WIFI_SCAN_OFF) ||
-              (wifi_scan_obj.currentScanMode == WIFI_CONNECTED) ||
-              (wifi_scan_obj.currentScanMode == OTA_UPDATE)) {
-            if (current_menu->selected < current_menu->list->size() - 1) {
-              current_menu->selected++;
-              // Page down
-              if (current_menu->selected - this->menu_start_index >= BUTTON_SCREEN_LIMIT) {
-                this->buildButtons(current_menu, current_menu->selected + 1 - BUTTON_SCREEN_LIMIT);
-                this->displayCurrentMenu(current_menu->selected + 1 - BUTTON_SCREEN_LIMIT);
-              }
-              else
-                this->buttonSelected(current_menu->selected - this->menu_start_index, current_menu->selected);
-              if (!current_menu->list->get(current_menu->selected - 1).selected)
-                this->buttonNotSelected(current_menu->selected - 1 - this->menu_start_index, current_menu->selected - 1);
-            }
-            // Loop to beginning
-            else {
-              if (current_menu->selected >= BUTTON_SCREEN_LIMIT) {
-                current_menu->selected = 0;
-                this->buildButtons(current_menu);
-                this->displayCurrentMenu();
-                this->buttonSelected(current_menu->selected);
-              }
-              else {
-                current_menu->selected = 0;
-                this->buttonSelected(current_menu->selected);
-                if (!current_menu->list->get(current_menu->list->size() - 1).selected)
-                  this->buttonNotSelected(current_menu->list->size() - 1);
-              }
-            }
-          }
-          else if ((wifi_scan_obj.currentScanMode == WIFI_PACKET_MONITOR) ||
-                  (wifi_scan_obj.currentScanMode == WIFI_SCAN_EAPOL) ||
-                  (wifi_scan_obj.currentScanMode == WIFI_SCAN_CHAN_ANALYZER) ||
-                  (wifi_scan_obj.currentScanMode == WIFI_SCAN_PACKET_RATE) ||
-                  (wifi_scan_obj.currentScanMode == WIFI_SCAN_RAW_CAPTURE) ||
-                  (wifi_scan_obj.currentScanMode == WIFI_SCAN_AP) ||
-                  (wifi_scan_obj.currentScanMode == WIFI_SCAN_PROBE) ||
-                  (wifi_scan_obj.currentScanMode == WIFI_SCAN_DEAUTH) ||
-                  (wifi_scan_obj.currentScanMode == WIFI_SCAN_SIG_STREN)) {
-            #ifndef HAS_DUAL_BAND
-              if (wifi_scan_obj.set_channel > 1)
-                wifi_scan_obj.changeChannel(wifi_scan_obj.set_channel - 1);
-              else
-                wifi_scan_obj.changeChannel(14);
-            #else
-              if (wifi_scan_obj.dual_band_channel_index > 0)
-                wifi_scan_obj.dual_band_channel_index--;
-              else
-                wifi_scan_obj.dual_band_channel_index = DUAL_BAND_CHANNELS - 1;
+          _t_was_pressed = true;
+        } else if (_t_was_pressed) {
+          _t_was_pressed = false;
+          int16_t deltaY = (int16_t)_t_last_y - (int16_t)_t_start_y;
+          int visible = min((int)BUTTON_SCREEN_LIMIT,
+                            (int)current_menu->list->size() - (int)this->menu_start_index);
 
-              wifi_scan_obj.changeChannel(wifi_scan_obj.dual_band_channels[wifi_scan_obj.dual_band_channel_index]);
-            #endif
-          }
-          else if (wifi_scan_obj.currentScanMode == WIFI_SCAN_CHAN_ACT) {
-            #ifndef HAS_DUAL_BAND
-              if (wifi_scan_obj.activity_page > 1) {
-                wifi_scan_obj.activity_page--;
+          if (abs(deltaY) <= 15) {
+            // Tap: hit-test each visible button and execute the one touched
+            bool handled = false;
+            for (int b = 0; b < visible && !handled; b++) {
+              if (display_obj.key[b].contains(_t_start_x, _t_start_y)) {
+                int item_idx = this->menu_start_index + b;
+                if (item_idx < (int)current_menu->list->size()) {
+                  current_menu->list->get(item_idx).callable();
+                  handled = true;
+                }
               }
-            #else
-              if (wifi_scan_obj.activity_page > 0) {
-                wifi_scan_obj.activity_page--;
-              }
-            #endif
-            wifi_scan_obj.drawChannelLine();
+            }
+          } else if (deltaY < -15) {
+            // Swipe up: scroll forward to show items below
+            int new_start = this->menu_start_index + 1;
+            if (new_start < (int)current_menu->list->size()) {
+              this->buildButtons(current_menu, new_start);
+              this->displayCurrentMenu(new_start);
+            }
+          } else {
+            // Swipe down: scroll back to show items above
+            int new_start = this->menu_start_index - 1;
+            if (new_start >= 0) {
+              this->buildButtons(current_menu, new_start);
+              this->displayCurrentMenu(new_start);
+            }
           }
+          this->displayMenuButtons();
+        } else {
+          _t_was_pressed = false;
         }
-        if(menu_button == SELECT_BUTTON) {
-          current_menu->list->get(current_menu->selected).callable();
-        }
-        else {
-          if ((wifi_scan_obj.currentScanMode == WIFI_SCAN_OFF) ||
-              (wifi_scan_obj.currentScanMode == WIFI_CONNECTED))
-            this->displayMenuButtons();
+
+      } else {
+        // Non-menu scan states: 3-zone touch buttons for channel / page navigation
+        uint8_t menu_button = display_obj.menuButton(&t_x, &t_y, pressed);
+        if (menu_button > -1) {
+          if (menu_button == UP_BUTTON) {
+            if ((wifi_scan_obj.currentScanMode == WIFI_PACKET_MONITOR) ||
+                (wifi_scan_obj.currentScanMode == WIFI_SCAN_EAPOL) ||
+                (wifi_scan_obj.currentScanMode == WIFI_SCAN_CHAN_ANALYZER) ||
+                (wifi_scan_obj.currentScanMode == WIFI_SCAN_PACKET_RATE) ||
+                (wifi_scan_obj.currentScanMode == WIFI_SCAN_RAW_CAPTURE) ||
+                (wifi_scan_obj.currentScanMode == WIFI_SCAN_AP) ||
+                (wifi_scan_obj.currentScanMode == WIFI_SCAN_PROBE) ||
+                (wifi_scan_obj.currentScanMode == WIFI_SCAN_DEAUTH) ||
+                (wifi_scan_obj.currentScanMode == WIFI_SCAN_SIG_STREN)) {
+              #ifndef HAS_DUAL_BAND
+                if (wifi_scan_obj.set_channel < 14)
+                  wifi_scan_obj.changeChannel(wifi_scan_obj.set_channel + 1);
+                else
+                  wifi_scan_obj.changeChannel(1);
+              #else
+                if (wifi_scan_obj.dual_band_channel_index < DUAL_BAND_CHANNELS - 1)
+                  wifi_scan_obj.dual_band_channel_index++;
+                else
+                  wifi_scan_obj.dual_band_channel_index = 0;
+                wifi_scan_obj.changeChannel(wifi_scan_obj.dual_band_channels[wifi_scan_obj.dual_band_channel_index]);
+              #endif
+            }
+            else if (wifi_scan_obj.currentScanMode == WIFI_SCAN_CHAN_ACT) {
+              #ifndef HAS_DUAL_BAND
+                if (wifi_scan_obj.activity_page < MAX_CHANNEL / CHAN_PER_PAGE)
+                  wifi_scan_obj.activity_page++;
+              #else
+                if (wifi_scan_obj.activity_page < DUAL_BAND_CHANNELS / CHAN_PER_PAGE)
+                  wifi_scan_obj.activity_page++;
+              #endif
+              wifi_scan_obj.drawChannelLine();
+            }
+          }
+          if (menu_button == DOWN_BUTTON) {
+            if ((wifi_scan_obj.currentScanMode == WIFI_PACKET_MONITOR) ||
+                (wifi_scan_obj.currentScanMode == WIFI_SCAN_EAPOL) ||
+                (wifi_scan_obj.currentScanMode == WIFI_SCAN_CHAN_ANALYZER) ||
+                (wifi_scan_obj.currentScanMode == WIFI_SCAN_PACKET_RATE) ||
+                (wifi_scan_obj.currentScanMode == WIFI_SCAN_RAW_CAPTURE) ||
+                (wifi_scan_obj.currentScanMode == WIFI_SCAN_AP) ||
+                (wifi_scan_obj.currentScanMode == WIFI_SCAN_PROBE) ||
+                (wifi_scan_obj.currentScanMode == WIFI_SCAN_DEAUTH) ||
+                (wifi_scan_obj.currentScanMode == WIFI_SCAN_SIG_STREN)) {
+              #ifndef HAS_DUAL_BAND
+                if (wifi_scan_obj.set_channel > 1)
+                  wifi_scan_obj.changeChannel(wifi_scan_obj.set_channel - 1);
+                else
+                  wifi_scan_obj.changeChannel(14);
+              #else
+                if (wifi_scan_obj.dual_band_channel_index > 0)
+                  wifi_scan_obj.dual_band_channel_index--;
+                else
+                  wifi_scan_obj.dual_band_channel_index = DUAL_BAND_CHANNELS - 1;
+                wifi_scan_obj.changeChannel(wifi_scan_obj.dual_band_channels[wifi_scan_obj.dual_band_channel_index]);
+              #endif
+            }
+            else if (wifi_scan_obj.currentScanMode == WIFI_SCAN_CHAN_ACT) {
+              #ifndef HAS_DUAL_BAND
+                if (wifi_scan_obj.activity_page > 1)
+                  wifi_scan_obj.activity_page--;
+              #else
+                if (wifi_scan_obj.activity_page > 0)
+                  wifi_scan_obj.activity_page--;
+              #endif
+              wifi_scan_obj.drawChannelLine();
+            }
+          }
         }
       }
   
@@ -927,9 +919,10 @@ void MenuFunctions::battery(bool initial)
     uint16_t the_color;
     if (battery_obj.i2c_supported)
     {
-      // Could use int compare maybe idk
-      if (((String)battery_obj.battery_level != "25") && ((String)battery_obj.battery_level != "0"))
+      if (battery_obj.battery_level > 50)
         the_color = TFT_GREEN;
+      else if (battery_obj.battery_level > 25)
+        the_color = TFT_YELLOW;
       else
         the_color = TFT_RED;
 
@@ -1486,6 +1479,7 @@ void MenuFunctions::RunSetup()
   miniKbMenu.list = new LinkedList<MenuNode>();
   #ifdef HAS_SD
     sdDeleteMenu.list = new LinkedList<MenuNode>();
+    sdViewMenu.list = new LinkedList<MenuNode>();
   #endif
 
   // Bluetooth menu stuff
@@ -1552,6 +1546,7 @@ void MenuFunctions::RunSetup()
   miniKbMenu.name = "Mini Keyboard";
   #ifdef HAS_SD
     sdDeleteMenu.name = "Delete SD Files";
+    sdViewMenu.name = "View SD Files";
   #endif
   selectProbeSSIDsMenu.name = "Probe Requests";
   evilPortalMenu.name = "Evil Portal";
@@ -2736,6 +2731,17 @@ void MenuFunctions::RunSetup()
 
         this->changeMenu(&sdDeleteMenu, true);
       });
+
+      sdViewMenu.parentMenu = &deviceMenu;
+      this->addNodes(&deviceMenu, "View SD Files", TFTGREEN, NULL, SD_UPDATE, [this]() {
+        display_obj.clearScreen();
+        display_obj.tft.setTextWrap(false);
+        display_obj.tft.setCursor(0, SCREEN_HEIGHT / 3);
+        display_obj.tft.setTextColor(TFT_GREEN, TFT_BLACK);
+        display_obj.tft.println("Loading...");
+        this->buildSDViewMenu();
+        this->changeMenu(&sdViewMenu, true);
+      });
     }
   #endif
 
@@ -3377,6 +3383,98 @@ void MenuFunctions::buildSDFileMenu(bool update) {
 }
 
 
+void MenuFunctions::buildSDViewMenu() {
+  #ifdef HAS_SD
+    sd_obj.sd_files->clear();
+    delete sd_obj.sd_files;
+    sd_obj.sd_files = new LinkedList<String>();
+    sd_obj.listDirToLinkedList(sd_obj.sd_files);
+
+    sdViewMenu.list->clear();
+    delete sdViewMenu.list;
+    sdViewMenu.list = new LinkedList<MenuNode>();
+
+    this->addNodes(&sdViewMenu, text09, TFTLIGHTGREY, NULL, 0, [this]() {
+      this->changeMenu(sdViewMenu.parentMenu, true);
+    });
+
+    for (int x = 0; x < sd_obj.sd_files->size(); x++) {
+      this->addNodes(&sdViewMenu, sd_obj.sd_files->get(x), TFTCYAN, NULL, SD_UPDATE, [this, x]() {
+        this->viewSDFile(sd_obj.sd_files->get(x));
+      });
+    }
+  #endif
+}
+
+void MenuFunctions::viewSDFile(String path) {
+  #ifdef HAS_SD
+    File f = sd_obj.getFile("/" + path);
+    if (!f) {
+      display_obj.clearScreen();
+      this->drawStatusBar();
+      display_obj.tft.setTextColor(TFT_RED, TFT_BLACK);
+      display_obj.tft.setCursor(0, STATUS_BAR_WIDTH + 4);
+      display_obj.tft.print("Cannot open: " + path);
+      delay(1500);
+      this->changeMenu(&sdViewMenu, true);
+      return;
+    }
+
+    const uint16_t lineH   = 10;
+    const uint16_t startY  = STATUS_BAR_WIDTH + 2;
+    const uint16_t maxLines = (TFT_HEIGHT - startY - lineH) / lineH;
+    const uint16_t maxChars = TFT_WIDTH / 6;  // 6px per char at text size 1
+
+    auto resetPage = [&]() {
+      display_obj.clearScreen();
+      this->drawStatusBar();
+      display_obj.tft.setTextSize(1);
+      display_obj.tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    };
+
+    resetPage();
+    uint16_t lineCount = 0;
+    uint16_t y = startY;
+
+    while (f.available()) {
+      String line = f.readStringUntil('\n');
+      line.trim();
+      if (line.length() > maxChars)
+        line = line.substring(0, maxChars - 1) + ">";
+      display_obj.tft.setCursor(0, y);
+      display_obj.tft.print(line);
+      y += lineH;
+      lineCount++;
+
+      if (lineCount >= maxLines) {
+        display_obj.tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+        display_obj.tft.setCursor(0, TFT_HEIGHT - lineH);
+        display_obj.tft.print("--Tap for more--");
+
+        uint16_t tx, ty;
+        while (!display_obj.updateTouch(&tx, &ty)) delay(10);
+        while (display_obj.updateTouch(&tx, &ty)) delay(10);
+
+        resetPage();
+        lineCount = 0;
+        y = startY;
+      }
+    }
+
+    f.close();
+
+    display_obj.tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+    display_obj.tft.setCursor(0, y);
+    display_obj.tft.print("--- EOF. Tap to exit ---");
+
+    uint16_t tx, ty;
+    while (!display_obj.updateTouch(&tx, &ty)) delay(10);
+    while (display_obj.updateTouch(&tx, &ty)) delay(10);
+
+    this->changeMenu(&sdViewMenu, true);
+  #endif
+}
+
 // Function to add MenuNodes to a menu
 void MenuFunctions::addNodes(Menu * menu, String name, uint8_t color, Menu * child, int place, std::function<void()> callable, bool selected, String command)
 {
@@ -3726,6 +3824,34 @@ void MenuFunctions::displayCurrentMenu(int start_index)
     }
     display_obj.tft.setFreeFont(NULL);
   }
+
+  // Draw scroll indicators when the list extends beyond the visible window
+  #ifdef HAS_ILI9341
+  {
+    int total = (current_menu->list != NULL) ? (int)current_menu->list->size() : 0;
+    int visible = min((int)BUTTON_SCREEN_LIMIT, total - start_index);
+
+    // Up arrow: items exist above the current view
+    if (start_index > 0) {
+      int ax = TFT_WIDTH - 6;
+      int ay = STATUS_BAR_WIDTH + 2;
+      display_obj.tft.fillTriangle(ax, ay,
+                                   ax - 5, ay + 8,
+                                   ax + 5, ay + 8,
+                                   TFT_WHITE);
+    }
+
+    // Down arrow: items exist below the current view
+    if (start_index + visible < total) {
+      int ax = TFT_WIDTH - 6;
+      int ay = KEY_Y + visible * (KEY_H + KEY_SPACING_Y) + 1;
+      display_obj.tft.fillTriangle(ax, ay + 8,
+                                   ax - 5, ay,
+                                   ax + 5, ay,
+                                   TFT_WHITE);
+    }
+  }
+  #endif
 
   this->displayMenuButtons();
 }

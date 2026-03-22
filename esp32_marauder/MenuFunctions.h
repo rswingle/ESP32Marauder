@@ -158,6 +158,7 @@ class MenuFunctions
     Menu specSettingMenu;
     //Menu languageMenu;
     Menu sdDeleteMenu;
+    Menu sdViewMenu;
 
     // WiFi menu stuff
     Menu wifiSnifferMenu;
@@ -201,6 +202,8 @@ class MenuFunctions
 
     void setupSDFileList(bool update = false);
     void buildSDFileMenu(bool update = false);
+    void buildSDViewMenu();
+    void viewSDFile(String path);
     void displayMenuButtons();
     uint16_t getColor(uint16_t color);
     void drawAvgLine(int16_t value);
