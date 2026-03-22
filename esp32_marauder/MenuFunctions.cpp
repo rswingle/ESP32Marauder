@@ -931,16 +931,7 @@ void MenuFunctions::battery(bool initial)
         display_obj.tft.fillRect(204, 0, SCREEN_WIDTH, STATUS_BAR_WIDTH, STATUSBAR_COLOR);
       }
 
-      display_obj.tft.setCursor(0, 1);
-      /*if (!this->disable_touch) {
-        display_obj.tft.drawXBitmap(186,
-                                    0,
-                                    menu_icons[STATUS_BAT],
-                                    16,
-                                    16,
-                                    STATUSBAR_COLOR,
-                                    the_color);
-      }*/
+      display_obj.tft.setTextColor(the_color, STATUSBAR_COLOR, true);
       display_obj.tft.drawString((String)battery_obj.battery_level + "%", 204, 0, 2);
     }
   #endif
@@ -3446,7 +3437,7 @@ void MenuFunctions::viewSDFile(String path) {
       y += lineH;
       lineCount++;
 
-      if (lineCount >= maxLines) {
+      if (lineCount >= maxLines && f.available()) {
         display_obj.tft.setTextColor(TFT_YELLOW, TFT_BLACK);
         display_obj.tft.setCursor(0, TFT_HEIGHT - lineH);
         display_obj.tft.print("--Tap for more--");
