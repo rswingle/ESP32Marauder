@@ -1,8 +1,17 @@
-/* FLASH SETTINGS
-Board: LOLIN D32
-Flash Frequency: 80MHz
-Partition Scheme: Minimal SPIFFS
-https://www.online-utility.org/image/convert/to/XBM
+/*
+ * ESP32 Marauder Firmware
+ *
+ * Authors: rswingle, l3landgaunt
+ * Version: v1.1
+ * Repository: https://github.com/rswingle/ESP32Marauder
+ *
+ * Based on justcallmekoko/ESP32Marauder
+ *
+ * FLASH SETTINGS
+ * Board: LOLIN D32
+ * Flash Frequency: 80MHz
+ * Partition Scheme: Minimal SPIFFS
+ * https://www.online-utility.org/image/convert/to/XBM
 */
 
 #include "configs.h"

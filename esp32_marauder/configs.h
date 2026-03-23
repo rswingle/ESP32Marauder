@@ -38,7 +38,11 @@
 
   #define JSON_SETTING_SIZE 2048
 
-  #define MARAUDER_VERSION "v1.11.0"
+  #define MARAUDER_VERSION "v1.1"
+
+  // Firmware Authors
+  #define MARAUDER_AUTHORS "rswingle, l3landgaunt"
+  #define MARAUDER_AUTHOR_URL "https://github.com/rswingle/ESP32Marauder"
 
   #define GRAPH_REFRESH   100
 
