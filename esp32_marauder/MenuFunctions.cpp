@@ -502,9 +502,11 @@ void MenuFunctions::main(uint32_t currentTime)
 
           if (is_tap) {
             // Tap: hit-test each visible button and execute the one touched
+            // IMPORTANT: Use _t_last_x/_t_last_y (final position) not _t_start_x/_t_start_y
+            // This ensures button selection works correctly after scrolling
             bool handled = false;
             for (int b = 0; b < visible && !handled; b++) {
-              if (display_obj.key[b].contains(_t_start_x, _t_start_y)) {
+              if (display_obj.key[b].contains(_t_last_x, _t_last_y)) {
                 int item_idx = this->menu_start_index + b;
                 if (item_idx < (int)current_menu->list->size()) {
                   current_menu->list->get(item_idx).callable();
