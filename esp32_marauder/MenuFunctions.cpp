@@ -519,6 +519,7 @@ void MenuFunctions::main(uint32_t currentTime)
             int new_start = this->menu_start_index + 1;
             int max_start = max(0, (int)current_menu->list->size() - (int)BUTTON_SCREEN_LIMIT);
             if (new_start <= max_start) {
+              this->menu_start_index = new_start;
               this->buildButtons(current_menu, new_start);
               this->displayCurrentMenu(new_start);
             }
@@ -526,6 +527,7 @@ void MenuFunctions::main(uint32_t currentTime)
             // Swipe down: scroll back to show items above
             int new_start = this->menu_start_index - 1;
             if (new_start >= 0) {
+              this->menu_start_index = new_start;
               this->buildButtons(current_menu, new_start);
               this->displayCurrentMenu(new_start);
             }
@@ -3704,6 +3706,7 @@ void MenuFunctions::changeMenu(Menu* menu, bool simple_change) {
   current_menu = menu;
 
   current_menu->selected = 0;
+  this->menu_start_index = 0;  // Reset scroll position when changing menus
 
   buildButtons(menu);
 
