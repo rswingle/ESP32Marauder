@@ -516,17 +516,23 @@ void MenuFunctions::main(uint32_t currentTime)
             }
           } else if (is_swipe_up) {
             // Swipe up: scroll forward to show items below
-            int new_start = this->menu_start_index + 1;
+            // Calculate scroll distance based on swipe magnitude (roughly 1 item per 60px)
+            int scroll_items = max(1, min((int)(abs(deltaY) / 60), (int)BUTTON_SCREEN_LIMIT));
+            int new_start = this->menu_start_index + scroll_items;
             int max_start = max(0, (int)current_menu->list->size() - (int)BUTTON_SCREEN_LIMIT);
-            if (new_start <= max_start) {
+            if (new_start > max_start) new_start = max_start;
+            if (new_start != this->menu_start_index) {
               this->menu_start_index = new_start;
               this->buildButtons(current_menu, new_start);
               this->displayCurrentMenu(new_start);
             }
           } else if (is_swipe_down) {
             // Swipe down: scroll back to show items above
-            int new_start = this->menu_start_index - 1;
-            if (new_start >= 0) {
+            // Calculate scroll distance based on swipe magnitude (roughly 1 item per 60px)
+            int scroll_items = max(1, min((int)(abs(deltaY) / 60), (int)BUTTON_SCREEN_LIMIT));
+            int new_start = this->menu_start_index - scroll_items;
+            if (new_start < 0) new_start = 0;
+            if (new_start != this->menu_start_index) {
               this->menu_start_index = new_start;
               this->buildButtons(current_menu, new_start);
               this->displayCurrentMenu(new_start);
@@ -3834,30 +3840,63 @@ void MenuFunctions::displayCurrentMenu(int start_index)
     display_obj.tft.setFreeFont(NULL);
   }
 
-  // Draw scroll indicators when the list extends beyond the visible window
+  // Draw scrollbar when the list extends beyond the visible window
   #ifdef HAS_ILI9341
   {
     int total = (current_menu->list != NULL) ? (int)current_menu->list->size() : 0;
-    int visible = min((int)BUTTON_SCREEN_LIMIT, total - start_index);
 
-    // Up arrow: items exist above the current view
-    if (start_index > 0) {
-      int ax = TFT_WIDTH - 6;
-      int ay = STATUS_BAR_WIDTH + 2;
-      display_obj.tft.fillTriangle(ax, ay,
-                                   ax - 5, ay + 8,
-                                   ax + 5, ay + 8,
-                                   TFT_WHITE);
-    }
+    // Only draw scrollbar if content doesn't fit on one screen
+    if (total > BUTTON_SCREEN_LIMIT) {
+      const int scrollbar_x = TFT_WIDTH - 8;
+      const int scrollbar_width = 4;
+      const int scrollbar_top = STATUS_BAR_WIDTH + 5;
+      const int scrollbar_bottom = TFT_HEIGHT - 5;
+      const int scrollbar_height = scrollbar_bottom - scrollbar_top;
 
-    // Down arrow: items exist below the current view
-    if (start_index + visible < total) {
-      int ax = TFT_WIDTH - 6;
-      int ay = KEY_Y + visible * (KEY_H + KEY_SPACING_Y) + 1;
-      display_obj.tft.fillTriangle(ax, ay + 8,
-                                   ax - 5, ay,
-                                   ax + 5, ay,
-                                   TFT_WHITE);
+      // Calculate thumb position and size
+      const float ratio = (float)BUTTON_SCREEN_LIMIT / total;
+      int thumb_height = max(20, (int)(scrollbar_height * ratio));
+      int thumb_y = scrollbar_top + (int)((scrollbar_height - thumb_height) *
+                                          (float)start_index / (total - BUTTON_SCREEN_LIMIT));
+
+      // Ensure thumb stays within bounds
+      thumb_y = max(scrollbar_top, min(scrollbar_bottom - thumb_height, thumb_y));
+
+      // Draw scrollbar track (dark background)
+      display_obj.tft.fillRect(scrollbar_x, scrollbar_top, scrollbar_width,
+                               scrollbar_height, TFT_DARKGREY);
+
+      // Draw thumb (highlighted based on position)
+      // Use gradient color based on scroll position
+      uint16_t thumb_color = TFT_CYAN;
+      if (start_index > 0) thumb_color = TFT_GREEN;
+      if (start_index + BUTTON_SCREEN_LIMIT >= total) thumb_color = TFT_YELLOW;
+
+      display_obj.tft.fillRect(scrollbar_x, thumb_y, scrollbar_width,
+                               thumb_height, thumb_color);
+
+      // Also draw arrows for additional visual feedback
+      int visible = min((int)BUTTON_SCREEN_LIMIT, total - start_index);
+
+      // Up arrow: items exist above the current view
+      if (start_index > 0) {
+        int ax = TFT_WIDTH - 14;
+        int ay = STATUS_BAR_WIDTH + 2;
+        display_obj.tft.fillTriangle(ax, ay,
+                                     ax - 4, ay + 6,
+                                     ax + 4, ay + 6,
+                                     TFT_WHITE);
+      }
+
+      // Down arrow: items exist below the current view
+      if (start_index + visible < total) {
+        int ax = TFT_WIDTH - 14;
+        int ay = KEY_Y + visible * (KEY_H + KEY_SPACING_Y) + 1;
+        display_obj.tft.fillTriangle(ax, ay + 6,
+                                     ax - 4, ay,
+                                     ax + 4, ay,
+                                     TFT_WHITE);
+      }
     }
   }
   #endif
