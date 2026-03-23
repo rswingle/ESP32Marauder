@@ -473,24 +473,34 @@ void MenuFunctions::main(uint32_t currentTime)
 
         // Static state persists between loop() calls for swipe detection
         static bool _t_was_pressed = false;
-        static uint16_t _t_start_x = 0, _t_start_y = 0, _t_last_y = 0;
+        static uint16_t _t_start_x = 0, _t_start_y = 0, _t_last_x = 0, _t_last_y = 0;
 
         if (pressed) {
           if (!_t_was_pressed) {
             _t_start_x = t_x;
             _t_start_y = t_y;
+            _t_last_x  = t_x;
             _t_last_y  = t_y;
           } else {
+            _t_last_x = t_x;
             _t_last_y = t_y;
           }
           _t_was_pressed = true;
         } else if (_t_was_pressed) {
           _t_was_pressed = false;
           int16_t deltaY = (int16_t)_t_last_y - (int16_t)_t_start_y;
+          int16_t deltaX = (int16_t)_t_last_x - (int16_t)_t_start_x;
           int visible = min((int)BUTTON_SCREEN_LIMIT,
                             (int)current_menu->list->size() - (int)this->menu_start_index);
 
-          if (abs(deltaY) <= 15) {
+          // Gesture detection: check both axes for more accurate tap vs swipe
+          // It's a tap only if BOTH axes moved <= 15px
+          // It's a swipe if EITHER axis moved > 15px (with preference for vertical)
+          bool is_tap = (abs(deltaX) <= 15) && (abs(deltaY) <= 15);
+          bool is_swipe_up = !is_tap && (deltaY < -15);
+          bool is_swipe_down = !is_tap && (deltaY > 15);
+
+          if (is_tap) {
             // Tap: hit-test each visible button and execute the one touched
             bool handled = false;
             for (int b = 0; b < visible && !handled; b++) {
@@ -502,14 +512,15 @@ void MenuFunctions::main(uint32_t currentTime)
                 }
               }
             }
-          } else if (deltaY < -15) {
+          } else if (is_swipe_up) {
             // Swipe up: scroll forward to show items below
             int new_start = this->menu_start_index + 1;
-            if (new_start < (int)current_menu->list->size()) {
+            int max_start = max(0, (int)current_menu->list->size() - (int)BUTTON_SCREEN_LIMIT);
+            if (new_start <= max_start) {
               this->buildButtons(current_menu, new_start);
               this->displayCurrentMenu(new_start);
             }
-          } else {
+          } else if (is_swipe_down) {
             // Swipe down: scroll back to show items above
             int new_start = this->menu_start_index - 1;
             if (new_start >= 0) {

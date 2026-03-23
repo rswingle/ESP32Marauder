@@ -253,7 +253,7 @@
     #define HAS_FULL_SCREEN
     #define HAS_SD
     #define USE_SD
-    #define HAS_TEMP_SENSOR
+    //#define HAS_TEMP_SENSOR  // NOTE: Not implemented - ESP32 has internal sensor but no code uses it
     #define HAS_GPS
     #define HAS_NIMBLE_2
     #define HAS_IDF_3
