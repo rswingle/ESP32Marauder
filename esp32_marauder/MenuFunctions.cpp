@@ -494,11 +494,12 @@ void MenuFunctions::main(uint32_t currentTime)
                             (int)current_menu->list->size() - (int)this->menu_start_index);
 
           // Gesture detection: check both axes for more accurate tap vs swipe
-          // It's a tap only if BOTH axes moved <= 15px
-          // It's a swipe if EITHER axis moved > 15px (with preference for vertical)
-          bool is_tap = (abs(deltaX) <= 15) && (abs(deltaY) <= 15);
-          bool is_swipe_up = !is_tap && (deltaY < -15);
-          bool is_swipe_down = !is_tap && (deltaY > 15);
+          // It's a tap only if BOTH axes moved <= 10px (more sensitive)
+          // It's a swipe if vertical movement > 10px
+          const int GESTURE_THRESHOLD = 10;
+          bool is_tap = (abs(deltaX) <= GESTURE_THRESHOLD) && (abs(deltaY) <= GESTURE_THRESHOLD);
+          bool is_swipe_up = !is_tap && (deltaY < -GESTURE_THRESHOLD);
+          bool is_swipe_down = !is_tap && (deltaY > GESTURE_THRESHOLD);
 
           if (is_tap) {
             // Tap: hit-test each visible button and execute the one touched
@@ -514,28 +515,31 @@ void MenuFunctions::main(uint32_t currentTime)
                 }
               }
             }
-          } else if (is_swipe_up) {
-            // Swipe up: scroll forward to show items below
-            // Calculate scroll distance based on swipe magnitude (roughly 1 item per 60px)
-            int scroll_items = max(1, min((int)(abs(deltaY) / 60), (int)BUTTON_SCREEN_LIMIT));
-            int new_start = this->menu_start_index + scroll_items;
-            int max_start = max(0, (int)current_menu->list->size() - (int)BUTTON_SCREEN_LIMIT);
-            if (new_start > max_start) new_start = max_start;
-            if (new_start != this->menu_start_index) {
-              this->menu_start_index = new_start;
-              this->buildButtons(current_menu, new_start);
-              this->displayCurrentMenu(new_start);
-            }
-          } else if (is_swipe_down) {
-            // Swipe down: scroll back to show items above
-            // Calculate scroll distance based on swipe magnitude (roughly 1 item per 60px)
-            int scroll_items = max(1, min((int)(abs(deltaY) / 60), (int)BUTTON_SCREEN_LIMIT));
-            int new_start = this->menu_start_index - scroll_items;
-            if (new_start < 0) new_start = 0;
-            if (new_start != this->menu_start_index) {
-              this->menu_start_index = new_start;
-              this->buildButtons(current_menu, new_start);
-              this->displayCurrentMenu(new_start);
+          } else if (is_swipe_up || is_swipe_down) {
+            // Swipe: calculate scroll distance based on swipe magnitude
+            // Use 30px per item for more responsive scrolling (was 60px)
+            const int PIXELS_PER_ITEM = 30;
+            int scroll_items = max(1, min((int)(abs(deltaY) / PIXELS_PER_ITEM), (int)BUTTON_SCREEN_LIMIT));
+
+            if (is_swipe_up) {
+              // Swipe up: scroll forward to show items below
+              int new_start = this->menu_start_index + scroll_items;
+              int max_start = max(0, (int)current_menu->list->size() - (int)BUTTON_SCREEN_LIMIT);
+              if (new_start > max_start) new_start = max_start;
+              if (new_start != this->menu_start_index) {
+                this->menu_start_index = new_start;
+                this->buildButtons(current_menu, new_start);
+                this->displayCurrentMenu(new_start);
+              }
+            } else {
+              // Swipe down: scroll back to show items above
+              int new_start = this->menu_start_index - scroll_items;
+              if (new_start < 0) new_start = 0;
+              if (new_start != this->menu_start_index) {
+                this->menu_start_index = new_start;
+                this->buildButtons(current_menu, new_start);
+                this->displayCurrentMenu(new_start);
+              }
             }
           }
           this->displayMenuButtons();
