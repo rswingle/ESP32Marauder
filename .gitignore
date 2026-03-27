@@ -3,3 +3,28 @@
 .vscode/c_cpp_properties.json
 .vscode/settings.json
 esp32_marauder/.vscode/settings.json
+
+# Build artifacts
+build_output/
+build_v6/
+esp32_marauder/build/
+
+# Custom library dependencies (git clones for local builds)
+CustomAdafruit_BusIO/
+CustomAdafruit_MAX1704X/
+CustomAdafruit_NeoPixel/
+CustomArduinoJson/
+CustomAsyncTCP/
+CustomESP32Ping/
+CustomESPAsyncWebServer/
+CustomEspSoftwareSerial/
+CustomJPEGDecoder/
+CustomLinkedList/
+CustomMicroNMEA/
+CustomNimBLE-Arduino/
+CustomTFT_eSPI/
+CustomXPT2046_Touchscreen/
+Customlv_arduino/
+
+# Arduino CLI local installation
+bin/
