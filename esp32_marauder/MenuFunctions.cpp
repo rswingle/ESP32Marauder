@@ -3851,8 +3851,8 @@ void MenuFunctions::displayCurrentMenu(int start_index)
 
     // Only draw scrollbar if content doesn't fit on one screen
     if (total > BUTTON_SCREEN_LIMIT) {
-      const int scrollbar_x = TFT_WIDTH - 8;
-      const int scrollbar_width = 4;
+      const int scrollbar_x = TFT_WIDTH - 18;
+      const int scrollbar_width = 14;
       const int scrollbar_top = STATUS_BAR_WIDTH + 5;
       const int scrollbar_bottom = TFT_HEIGHT - 5;
       const int scrollbar_height = scrollbar_bottom - scrollbar_top;
