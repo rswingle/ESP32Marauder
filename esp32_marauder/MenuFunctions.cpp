@@ -3861,62 +3861,43 @@ void MenuFunctions::displayCurrentMenu(int start_index)
     display_obj.tft.setFreeFont(NULL);
   }
 
-  // Draw scrollbar when the list extends beyond the visible window
+  // Draw scroll arrows when the list extends beyond the visible window
   #ifdef HAS_ILI9341
   {
     int total = (current_menu->list != NULL) ? (int)current_menu->list->size() : 0;
 
-    // Only draw scrollbar if content doesn't fit on one screen
+    // Only draw arrows if content doesn't fit on one screen
     if (total > BUTTON_SCREEN_LIMIT) {
-      const int scrollbar_x = TFT_WIDTH - 18;
-      const int scrollbar_width = 14;
-      const int scrollbar_top = STATUS_BAR_WIDTH + 5;
-      const int scrollbar_bottom = TFT_HEIGHT - 5;
-      const int scrollbar_height = scrollbar_bottom - scrollbar_top;
-
-      // Calculate thumb position and size
-      const float ratio = (float)BUTTON_SCREEN_LIMIT / total;
-      int thumb_height = max(20, (int)(scrollbar_height * ratio));
-      int thumb_y = scrollbar_top + (int)((scrollbar_height - thumb_height) *
-                                          (float)this->menu_start_index / (total - BUTTON_SCREEN_LIMIT));
-
-      // Ensure thumb stays within bounds
-      thumb_y = max(scrollbar_top, min(scrollbar_bottom - thumb_height, thumb_y));
-
-      // Draw scrollbar track (dark background)
-      display_obj.tft.fillRect(scrollbar_x, scrollbar_top, scrollbar_width,
-                               scrollbar_height, TFT_DARKGREY);
-
-      // Draw thumb (highlighted based on position)
-      // Use gradient color based on scroll position
-      uint16_t thumb_color = TFT_CYAN;
-      if (this->menu_start_index > 0) thumb_color = TFT_GREEN;
-      if (this->menu_start_index + BUTTON_SCREEN_LIMIT >= total) thumb_color = TFT_YELLOW;
-
-      display_obj.tft.fillRect(scrollbar_x, thumb_y, scrollbar_width,
-                               thumb_height, thumb_color);
-
-      // Also draw arrows for additional visual feedback
       int visible = min((int)BUTTON_SCREEN_LIMIT, total - this->menu_start_index);
+      const int arrow_center_x = TFT_WIDTH / 2;
+      const int arrow_size = 10;
 
-      // Up arrow: items exist above the current view
+      // Up arrow at top - show when there are items above
       if (this->menu_start_index > 0) {
-        int ax = TFT_WIDTH - 24;
-        int ay = STATUS_BAR_WIDTH + 2;
-        display_obj.tft.fillTriangle(ax, ay,
-                                     ax - 4, ay + 6,
-                                     ax + 4, ay + 6,
-                                     TFT_WHITE);
+        int arrow_top_y = STATUS_BAR_WIDTH + 6;
+        display_obj.tft.fillTriangle(arrow_center_x, arrow_top_y,
+                                     arrow_center_x - arrow_size, arrow_top_y + arrow_size + 2,
+                                     arrow_center_x + arrow_size, arrow_top_y + arrow_size + 2,
+                                     TFT_CYAN);
+        // Second arrow for emphasis
+        display_obj.tft.fillTriangle(arrow_center_x, arrow_top_y + 5,
+                                     arrow_center_x - arrow_size + 3, arrow_top_y + arrow_size + 2,
+                                     arrow_center_x + arrow_size - 3, arrow_top_y + arrow_size + 2,
+                                     TFT_CYAN);
       }
 
-      // Down arrow: items exist below the current view
+      // Down arrow at bottom - show when there are items below
       if (this->menu_start_index + visible < total) {
-        int ax = TFT_WIDTH - 24;
-        int ay = KEY_Y + visible * (KEY_H + KEY_SPACING_Y) + 1;
-        display_obj.tft.fillTriangle(ax, ay + 6,
-                                     ax - 4, ay,
-                                     ax + 4, ay,
-                                     TFT_WHITE);
+        int arrow_bottom_y = TFT_HEIGHT - 10;
+        display_obj.tft.fillTriangle(arrow_center_x, arrow_bottom_y + arrow_size + 2,
+                                     arrow_center_x - arrow_size, arrow_bottom_y,
+                                     arrow_center_x + arrow_size, arrow_bottom_y,
+                                     TFT_CYAN);
+        // Second arrow for emphasis
+        display_obj.tft.fillTriangle(arrow_center_x, arrow_bottom_y + arrow_size - 1,
+                                     arrow_center_x - arrow_size + 3, arrow_bottom_y + 3,
+                                     arrow_center_x + arrow_size - 3, arrow_bottom_y + 3,
+                                     TFT_CYAN);
       }
     }
   }
