@@ -3861,7 +3861,7 @@ void MenuFunctions::displayCurrentMenu(int start_index)
       const float ratio = (float)BUTTON_SCREEN_LIMIT / total;
       int thumb_height = max(20, (int)(scrollbar_height * ratio));
       int thumb_y = scrollbar_top + (int)((scrollbar_height - thumb_height) *
-                                          (float)start_index / (total - BUTTON_SCREEN_LIMIT));
+                                          (float)this->menu_start_index / (total - BUTTON_SCREEN_LIMIT));
 
       // Ensure thumb stays within bounds
       thumb_y = max(scrollbar_top, min(scrollbar_bottom - thumb_height, thumb_y));
@@ -3873,18 +3873,18 @@ void MenuFunctions::displayCurrentMenu(int start_index)
       // Draw thumb (highlighted based on position)
       // Use gradient color based on scroll position
       uint16_t thumb_color = TFT_CYAN;
-      if (start_index > 0) thumb_color = TFT_GREEN;
-      if (start_index + BUTTON_SCREEN_LIMIT >= total) thumb_color = TFT_YELLOW;
+      if (this->menu_start_index > 0) thumb_color = TFT_GREEN;
+      if (this->menu_start_index + BUTTON_SCREEN_LIMIT >= total) thumb_color = TFT_YELLOW;
 
       display_obj.tft.fillRect(scrollbar_x, thumb_y, scrollbar_width,
                                thumb_height, thumb_color);
 
       // Also draw arrows for additional visual feedback
-      int visible = min((int)BUTTON_SCREEN_LIMIT, total - start_index);
+      int visible = min((int)BUTTON_SCREEN_LIMIT, total - this->menu_start_index);
 
       // Up arrow: items exist above the current view
-      if (start_index > 0) {
-        int ax = TFT_WIDTH - 14;
+      if (this->menu_start_index > 0) {
+        int ax = TFT_WIDTH - 24;
         int ay = STATUS_BAR_WIDTH + 2;
         display_obj.tft.fillTriangle(ax, ay,
                                      ax - 4, ay + 6,
@@ -3893,8 +3893,8 @@ void MenuFunctions::displayCurrentMenu(int start_index)
       }
 
       // Down arrow: items exist below the current view
-      if (start_index + visible < total) {
-        int ax = TFT_WIDTH - 14;
+      if (this->menu_start_index + visible < total) {
+        int ax = TFT_WIDTH - 24;
         int ay = KEY_Y + visible * (KEY_H + KEY_SPACING_Y) + 1;
         display_obj.tft.fillTriangle(ax, ay + 6,
                                      ax - 4, ay,
