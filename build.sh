@@ -318,9 +318,16 @@ build() {
   apply_zmuldefs "$TARGET_IDF"
 
   info "Building..."
+  # Create build directory and set build path
+  local board_short
+  board_short="$(echo "$TARGET_FQBN" | cut -d: -f3 | cut -d: -f1)"
+  local build_dir="$SCRIPT_DIR/esp32_marauder/build/esp32.esp32.${board_short}"
+  mkdir -p "$build_dir"
+
   arduino-cli compile \
     --fqbn "$TARGET_FQBN" \
     --libraries "$LIBS_DIR" \
+    --build-path "$build_dir" \
     --build-property "compiler.cpp.extra_flags='-D${TARGET_FLAG}'" \
     --warnings none \
     "$SKETCH"
