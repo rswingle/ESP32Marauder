@@ -2300,6 +2300,19 @@ void MenuFunctions::RunSetup()
         this->changeMenu(wifiAPMenu.parentMenu, true);
       });
 
+      // Auto-scan if no APs found
+      if (access_points->size() == 0) {
+        display_obj.clearScreen();
+        display_obj.updateBanner("Scanning for APs...");
+        this->drawStatusBar();
+
+        // Start AP scan - this will populate access_points
+        wifi_scan_obj.StartScan(WIFI_SCAN_AP, TFT_MAGENTA);
+
+        // Wait a bit for scan results
+        delay(2000);
+      }
+
       // Populate the menu with buttons
       for (int i = 0; i < access_points->size(); i++) {
         // This is the menu node
