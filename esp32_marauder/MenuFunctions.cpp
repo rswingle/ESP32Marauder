@@ -765,7 +765,7 @@ void MenuFunctions::main(uint32_t currentTime)
             if (current_menu->selected >= BUTTON_SCREEN_LIMIT) {
               current_menu->selected = 0;
               this->buildButtons(current_menu);
-              this->displayCurrentMenu();
+              this->displayCurrentMenu(this->menu_start_index);
               this->buttonSelected(current_menu->selected);
             }
             else {
@@ -3295,7 +3295,7 @@ void MenuFunctions::RunSetup()
 
           // Display info on screen
           if (pressed) {
-            this->displayCurrentMenu();
+            this->displayCurrentMenu(this->menu_start_index);
             display_obj.tft.setTextWrap(false);
             display_obj.tft.fillRect(0, SCREEN_HEIGHT / 3, SCREEN_WIDTH, STATUS_BAR_WIDTH, TFT_BLACK);
             display_obj.tft.fillRect(0, SCREEN_HEIGHT / 3 + TEXT_HEIGHT * 2, SCREEN_WIDTH, STATUS_BAR_WIDTH, TFT_BLACK);
@@ -3720,7 +3720,7 @@ void MenuFunctions::changeMenu(Menu* menu, bool simple_change) {
 
   buildButtons(menu);
 
-  displayCurrentMenu();
+  displayCurrentMenu(this->menu_start_index);
 
   //#ifdef MARAUDER_V8
   //  digitalWrite(TFT_BL, HIGH);
