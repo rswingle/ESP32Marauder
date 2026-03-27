@@ -11,7 +11,22 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKETCH="$SCRIPT_DIR/esp32_marauder/esp32_marauder.ino"
 LIBS_DIR="${ARDUINO_LIBRARIES:-$HOME/Arduino/libraries}"
-PLATFORM_BASE="$HOME/.arduino15/packages/esp32/hardware/esp32"
+
+# Auto-detect Arduino directories (Linux vs macOS)
+ARDUINO_DIRECTORIES=("$HOME/.arduino15" "$HOME/Library/Arduino15" "/Users/$USER/Library/Arduino15")
+ARDUINO_DIR=""
+for dir in "${ARDUINO_DIRECTORIES[@]}"; do
+  if [[ -d "$dir" ]]; then
+    ARDUINO_DIR="$dir"
+    break
+  fi
+done
+
+if [[ -z "$ARDUINO_DIR" ]]; then
+  ARDUINO_DIR="$HOME/.arduino15"  # fallback to default
+fi
+
+PLATFORM_BASE="$ARDUINO_DIR/packages/esp32/hardware/esp32"
 TFT_DIR="$LIBS_DIR/TFT_eSPI"
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
