@@ -8,6 +8,7 @@ esp32_marauder/.vscode/settings.json
 build_output/
 build_v6/
 esp32_marauder/build/
+Release_Builds/
 
 # Custom library dependencies (git clones for local builds)
 CustomAdafruit_BusIO/

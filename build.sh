@@ -35,7 +35,7 @@ warn()  { echo "[warn]  $*" >&2; }
 die()   { echo "[error] $*" >&2; exit 1; }
 
 # ─── Target table (Bash 3.x compatible — no associative arrays) ───────────────
-# Sets TARGET_FQBN, TARGET_FLAG, TARGET_IDF, TARGET_TFT for a given target name.
+# Sets TARGET_FQBN, TARGET_FLAG, TARGET_IDF, TARGET_TFT, TARGET_FILE for a given target name.
 # Returns 1 for unknown targets.
 get_target_params() {
   local target="$1"
@@ -45,114 +45,133 @@ get_target_params() {
       TARGET_FLAG="MARAUDER_V4"
       TARGET_IDF="3.3.4"
       TARGET_TFT="User_Setup_og_marauder.h"
+      TARGET_FILE="old_hardware"
       ;;
     v6)
       TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
       TARGET_FLAG="MARAUDER_V6"
       TARGET_IDF="3.3.4"
       TARGET_TFT="User_Setup_og_marauder.h"
+      TARGET_FILE="v6"
       ;;
     v6_1)
       TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
       TARGET_FLAG="MARAUDER_V6_1"
       TARGET_IDF="3.3.4"
       TARGET_TFT="User_Setup_og_marauder.h"
+      TARGET_FILE="v6_1"
       ;;
     v7)
       TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
       TARGET_FLAG="MARAUDER_V7"
       TARGET_IDF="3.3.4"
       TARGET_TFT="User_Setup_dual_nrf24.h"
+      TARGET_FILE="marauder_v7"
       ;;
     kit)
       TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
       TARGET_FLAG="MARAUDER_KIT"
       TARGET_IDF="3.3.4"
       TARGET_TFT="User_Setup_og_marauder.h"
+      TARGET_FILE="kit"
       ;;
     mini)
       TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
       TARGET_FLAG="MARAUDER_MINI"
       TARGET_IDF="3.3.4"
       TARGET_TFT="User_Setup_marauder_mini.h"
+      TARGET_FILE="mini"
       ;;
     lddb)
       TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
       TARGET_FLAG="ESP32_LDDB"
       TARGET_IDF="3.3.4"
       TARGET_TFT=""
+      TARGET_FILE="esp32_lddb"
       ;;
     dev_pro)
       TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
       TARGET_FLAG="MARAUDER_DEV_BOARD_PRO"
       TARGET_IDF="3.3.4"
       TARGET_TFT=""
+      TARGET_FILE="marauder_dev_board_pro"
       ;;
     flipper)
       TARGET_FQBN="esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled"
       TARGET_FLAG="MARAUDER_FLIPPER"
       TARGET_IDF="2.0.11"
       TARGET_TFT=""
+      TARGET_FILE="flipper"
       ;;
     multiboard_s3)
       TARGET_FQBN="esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=4M"
       TARGET_FLAG="MARAUDER_MULTIBOARD_S3"
       TARGET_IDF="2.0.11"
       TARGET_TFT=""
+      TARGET_FILE="multiboardS3"
       ;;
     rev_feather)
       TARGET_FQBN="esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled"
       TARGET_FLAG="MARAUDER_REV_FEATHER"
       TARGET_IDF="2.0.11"
       TARGET_TFT="User_Setup_marauder_rev_feather.h"
+      TARGET_FILE="rev_feather"
       ;;
     m5stickc)
       TARGET_FQBN="esp32:esp32:m5stick-c:PartitionScheme=min_spiffs"
       TARGET_FLAG="MARAUDER_M5STICKC"
       TARGET_IDF="2.0.11"
       TARGET_TFT="User_Setup_marauder_m5stickc.h"
+      TARGET_FILE="m5stickc_plus"
       ;;
     m5stickcplus2)
       TARGET_FQBN="esp32:esp32:m5stick-c:PartitionScheme=min_spiffs"
       TARGET_FLAG="MARAUDER_M5STICKCP2"
       TARGET_IDF="2.0.11"
       TARGET_TFT="User_Setup_marauder_m5stickcp2.h"
+      TARGET_FILE="m5stickc_plus2"
       ;;
     cardputer)
       TARGET_FQBN="esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=8M,PSRAM=disabled"
       TARGET_FLAG="MARAUDER_CARDPUTER"
       TARGET_IDF="2.0.11"
       TARGET_TFT="User_Setup_marauder_m5cardputer.h"
+      TARGET_FILE="m5cardputer"
       ;;
     cyd_micro)
       TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
       TARGET_FLAG="MARAUDER_CYD_MICRO"
       TARGET_IDF="2.0.11"
       TARGET_TFT="User_Setup_cyd_micro.h"
+      TARGET_FILE="cyd_2432S028"
       ;;
     cyd_guition)
       TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
       TARGET_FLAG="MARAUDER_CYD_GUITION"
       TARGET_IDF="2.0.11"
       TARGET_TFT="User_Setup_cyd_guition.h"
+      TARGET_FILE="cyd_2432S024_guition"
       ;;
     cyd_2usb)
       TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
       TARGET_FLAG="MARAUDER_CYD_2USB"
       TARGET_IDF="3.3.4"
       TARGET_TFT="User_Setup_cyd_2usb.h"
+      TARGET_FILE="cyd_2432S028_2usb"
       ;;
     cyd_3_5)
       TARGET_FQBN="esp32:esp32:d32:PartitionScheme=min_spiffs"
       TARGET_FLAG="MARAUDER_CYD_3_5_INCH"
       TARGET_IDF="2.0.11"
       TARGET_TFT="User_Setup_cyd_3_5_inch.h"
+      TARGET_FILE="cyd_3_5_inch"
       ;;
     c5)
       TARGET_FQBN="esp32:esp32:esp32c5:FlashSize=8M,PartitionScheme=min_spiffs,PSRAM=enabled"
       TARGET_FLAG="MARAUDER_C5"
       TARGET_IDF="3.3.4"
       TARGET_TFT=""
+      TARGET_FILE="esp32c5devkitc1"
       ;;
     *)
       return 1
@@ -345,7 +364,24 @@ build() {
     info "Size:   $(du -sh "$bin" | cut -f1)"
   else
     info "Build output dir: $build_dir"
+    return
   fi
+
+  # ─── Create release firmware with upstream naming convention ───────────────
+  local version version_underscore date release_dir release_bin
+  version="$(grep '#define MARAUDER_VERSION' "$SCRIPT_DIR/esp32_marauder/configs.h" | sed -E 's/.*"v([^"]+)"/\1/')"
+  version_underscore="v$(echo "$version" | tr '.' '_')"
+  date="$(date +%Y%m%d)"
+  release_dir="$SCRIPT_DIR/Release_Builds"
+  release_bin="esp32_marauder_${version_underscore}_${date}_${TARGET_FILE}.bin"
+
+  mkdir -p "$release_dir"
+  cp "$bin" "$release_dir/$release_bin"
+
+  echo ""
+  info "Release firmware created:"
+  info "  $release_dir/$release_bin"
+  info "  Size: $(du -sh "$release_dir/$release_bin" | cut -f1)"
 }
 
 # ─── Entrypoint ───────────────────────────────────────────────────────────────
