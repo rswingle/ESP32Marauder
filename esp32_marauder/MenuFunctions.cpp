@@ -1575,6 +1575,10 @@ void MenuFunctions::RunSetup()
   this->addNodes(&mainMenu, text_table1[7], TFTGREEN, NULL, WIFI, [this]() {
     this->changeMenu(&wifiMenu, true);
   });
+  // Add "Join WiFi" directly to main menu for quick access
+  this->addNodes(&mainMenu, "Join WiFi", TFTCYAN, NULL, JOIN_WIFI, [this](){
+    this->joinWiFiDirect();
+  });
   this->addNodes(&mainMenu, text_table1[19], TFTCYAN, NULL, BLUETOOTH, [this]() {
     this->changeMenu(&bluetoothMenu, true);
   });
@@ -4008,6 +4012,113 @@ void MenuFunctions::displayCurrentMenu(int start_index)
     this->changeMenu(current_menu, true);
   }
 #endif
+
+// Direct WiFi join function - scans for APs and connects
+void MenuFunctions::joinWiFiDirect() {
+  extern LinkedList<AccessPoint>* access_points;
+
+  display_obj.clearScreen();
+  display_obj.updateBanner("Scanning for APs...");
+  this->drawStatusBar();
+
+  // Start AP scan
+  wifi_scan_obj.StartScan(WIFI_SCAN_AP, TFT_MAGENTA);
+
+  // Wait for scan to collect some APs
+  delay(3000);
+
+  // Stop scan
+  wifi_scan_obj.StopScan(WIFI_SCAN_AP);
+
+  // Check if we found any APs
+  if (access_points->size() == 0) {
+    display_obj.clearScreen();
+    display_obj.updateBanner("No APs Found");
+    display_obj.tft.setCursor(0, TFT_HEIGHT / 2);
+    display_obj.tft.setTextColor(TFT_RED, TFT_BLACK);
+    display_obj.tft.println("No networks found.");
+    display_obj.tft.println("Try again in a different location.");
+    delay(3000);
+    this->changeMenu(&mainMenu, true);
+    return;
+  }
+
+  // Create temporary menu for AP selection
+  Menu apSelectMenu;
+  apSelectMenu.list = new LinkedList<MenuNode>();
+  apSelectMenu.parentMenu = &mainMenu;
+  apSelectMenu.name = "Select Network";
+
+  // Add back button
+  this->addNodes(&apSelectMenu, text09, TFTLIGHTGREY, NULL, 0, [this]() {
+    wifi_scan_obj.StopScan(WIFI_SCAN_AP);
+    this->changeMenu(&mainMenu, true);
+  });
+
+  // Populate with APs
+  for (int i = 0; i < access_points->size() && i < 20; i++) {
+    this->addNodes(&apSelectMenu, access_points->get(i).essid, TFTCYAN, NULL, 255, [this, i](){
+      #ifdef HAS_TOUCH
+        char passwordBuf[64] = {0};
+
+        // Display SSID at top
+        display_obj.clearScreen();
+        display_obj.updateBanner("Enter Password");
+        this->drawStatusBar();
+
+        display_obj.tft.setCursor(0, TFT_HEIGHT / 2 - 20);
+        display_obj.tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        display_obj.tft.println("Network: " + access_points->get(i).essid);
+
+        display_obj.tft.setCursor(0, TFT_HEIGHT / 2 + 20);
+        display_obj.tft.setTextColor(TFT_CYAN, TFT_BLACK);
+        display_obj.tft.println("Enter password below:");
+
+        // Get password
+        if (keyboardInput(passwordBuf, sizeof(passwordBuf), "Password")) {
+          if (passwordBuf[0] != 0) {
+            // Save credentials
+            settings_obj.saveSetting<bool>("ClientSSID", access_points->get(i).essid);
+            settings_obj.saveSetting<bool>("ClientPW", String(passwordBuf));
+
+            // Show connecting message
+            display_obj.clearScreen();
+            display_obj.updateBanner("Connecting...");
+            this->drawStatusBar();
+
+            display_obj.tft.setCursor(0, TFT_HEIGHT / 2);
+            display_obj.tft.setTextColor(TFT_WHITE, TFT_BLACK);
+            display_obj.tft.println("Connecting to...");
+            display_obj.tft.println(access_points->get(i).essid);
+
+            // Connect
+            if (wifi_scan_obj.joinWiFi(access_points->get(i).essid, String(passwordBuf))) {
+              display_obj.clearScreen();
+              display_obj.updateBanner("Connected!");
+              display_obj.tft.setCursor(0, TFT_HEIGHT / 2);
+              display_obj.tft.setTextColor(TFT_GREEN, TFT_BLACK);
+              display_obj.tft.println("Successfully connected!");
+              display_obj.tft.println("Network saved for auto-connect.");
+              delay(3000);
+            } else {
+              display_obj.clearScreen();
+              display_obj.updateBanner("Connection Failed");
+              display_obj.tft.setCursor(0, TFT_HEIGHT / 2);
+              display_obj.tft.setTextColor(TFT_RED, TFT_BLACK);
+              display_obj.tft.println("Failed to connect.");
+              display_obj.tft.println("Check password and try again.");
+              delay(3000);
+            }
+          }
+        }
+        this->changeMenu(&mainMenu, true);
+      #endif
+    });
+  }
+
+  // Show the AP selection menu
+  this->changeMenu(&apSelectMenu, true);
+}
 
 #endif
 
