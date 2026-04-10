@@ -38,7 +38,7 @@
 
   #define JSON_SETTING_SIZE 2048
 
-  #define MARAUDER_VERSION "v1.1"
+#define MARAUDER_VERSION "v1.2"
 
   // Firmware Authors
   #define MARAUDER_AUTHORS "rswingle, l3landgaunt"
