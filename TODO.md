@@ -1,7 +1,7 @@
 # TODO
 
-- [ ] analyze codebase and use all available tools to determine upgrades and enhancements that can be made
-- [ ] add suggested enhancements as TODO items
+ - [x] analyze codebase and use all available tools to determine upgrades and enhancements that can be made
+ - [x] add suggested enhancements as TODO items
 
 Completed tasks:
 - [x] analyze codebase and use all available tools to determine upgrades and enhancements that can be made
