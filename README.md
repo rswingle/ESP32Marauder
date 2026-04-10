@@ -85,6 +85,7 @@ git clone --branch 1.15.0    https://github.com/adafruit/Adafruit_BusIO
 git clone --branch 1.0.2     https://github.com/adafruit/Adafruit_MAX1704X
 ```
 
+
 ### Configure TFT_eSPI (display targets only)
 
 Copy all `User_Setup_*.h` files from the repo root into your `TFT_eSPI` library directory, then activate the correct setup file in `User_Setup_Select.h`.
@@ -102,6 +103,23 @@ Edit `~/Arduino/libraries/TFT_eSPI/User_Setup_Select.h` and uncomment the line:
 ```
 
 Make sure all other `#include` lines in that file are commented out.
+
+TFT_eSPI - User Setup (developer-friendly steps)
+------------------------------------------------
+
+If you prefer to keep a local checkout of TFT_eSPI (or mirror CI behavior), follow these steps which mirror the repository workflow:
+
+1. Create a local `CustomTFT_eSPI` directory (or use your Arduino libraries folder):
+
+   ```bash
+   git clone --branch V2.5.34 https://github.com/Bodmer/TFT_eSPI CustomTFT_eSPI
+   cp User_Setup_og_marauder.h CustomTFT_eSPI/
+   # Update User_Setup_Select.h inside CustomTFT_eSPI to include your chosen file
+   ```
+
+2. When using Arduino CLI or scripts, make sure the `CustomTFT_eSPI` path is included in your library path (`--libraries` flag) or placed in your standard libraries folder so the build picks the correct setup file.
+
+3. CI workflows (see .github/workflows/build_parallel.yml) already copy and configure the correct User_Setup_*.h into their TFT_eSPI checkout before building — replicate those steps locally to reproduce CI builds.
 
 ### Apply the `-zmuldefs` Linker Patch (IDF 3.3.4)
 
