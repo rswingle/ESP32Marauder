@@ -24,3 +24,5 @@ Progress on suggested enhancements:
   - Plan: Added a tests/ directory and placeholder host-side harness; next: extract testable firmware functions for real tests.
 - [x] Pin required library versions in documentation and provide install commands (Arduino CLI install snippets)
   - Plan: Added INSTALL.md with arduino-cli commands to fetch specific library versions used by CI.
+- [x] remove touch support as is and revert to original navigation
+  - Note: Reverted default behavior to disable touch in MenuFunctions::RunSetup(); touch can be re-enabled via hardware toggle (C button). See esp32_marauder/MenuFunctions.cpp

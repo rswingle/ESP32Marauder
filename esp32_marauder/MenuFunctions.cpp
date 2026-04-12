@@ -1447,7 +1447,10 @@ void MenuFunctions::RunSetup()
   extern LinkedList<ProbeReqSsid>* probe_req_ssids;
   extern LinkedList<ssid>* ssids;
 
-  this->disable_touch = false;
+  // Disable touch by default to revert to original button-based navigation.
+  // This implements the TODO to "remove touch support as is and revert to original navigation"
+  // Touch can still be enabled at runtime via the hardware toggle (C button).
+  this->disable_touch = true;
 
   #ifdef MARAUDER_CARDPUTER
     M5CardputerKeyboard.begin();
