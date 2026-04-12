@@ -2073,7 +2073,7 @@ void MenuFunctions::RunSetup()
 
   clearSSIDsMenu.parentMenu = &wifiGeneralMenu;
 
-  #ifdef HAS_ILI9341
+  #if defined(HAS_ILI9341) && defined(HAS_TOUCH)
     this->addNodes(&wifiGeneralMenu, text_table1[1], TFTNAVY, NULL, KEYBOARD_ICO, [this](){
       char ssidBuf[64] = {0};
       bool keep_going = true;

@@ -245,7 +245,13 @@
   #endif
 
   #if defined(MARAUDER_V6) || defined(MARAUDER_V6_1)
-    #define HAS_TOUCH
+    // For MARAUDER_V6 we disable touchscreen by default to preserve
+    // button-based navigation and avoid build issues with differing
+    // TFT_eSPI touchscreen APIs across library versions.
+    // If you want touchscreen enabled for this target, re-enable
+    // HAS_TOUCH here after ensuring the TFT_eSPI/XPT2046 library
+    // versions are compatible.
+    //#define HAS_TOUCH
     //#define FLIPPER_ZERO_HAT
     #define HAS_BATTERY
     #define HAS_BT
@@ -257,11 +263,20 @@
     #define HAS_FULL_SCREEN
     #define HAS_SD
     #define USE_SD
-    //#define HAS_TEMP_SENSOR  // NOTE: Not implemented - ESP32 has internal sensor but no code uses it
+    // NOTE: Not implemented - ESP32 has internal sensor but no code uses it
+    //#define HAS_TEMP_SENSOR
     #define HAS_GPS
     #define HAS_NIMBLE_2
     #define HAS_IDF_3
     #define HAS_C5_SD
+
+    // Define a sensible default backlight pin for V6 targets. Matches
+    // User_Setup_og_marauder.h examples and allows BL macros to compile.
+    // Hardware owners should override this if their board uses a
+    // different backlight pin.
+    #ifndef TFT_BL
+      #define TFT_BL 32
+    #endif
   #endif
 
   #ifdef MARAUDER_CYD_MICRO

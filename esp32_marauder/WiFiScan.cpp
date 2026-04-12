@@ -32,7 +32,12 @@ LinkedList<Flipper>* flippers;
 LinkedList<IPAddress>* ipList;
 LinkedList<ProbeReqSsid>* probe_req_ssids;
 
-extern "C" int ieee80211_raw_frame_sanity_check(int32_t arg, int32_t arg2, int32_t arg3){
+// The project previously defined ieee80211_raw_frame_sanity_check as a global
+// symbol which collides with the same symbol in the ESP32 core libraries on
+// some platform versions. Make this function file-local to avoid linker
+// collisions. If cross-file usage is later required, rename to a project-
+// prefixed symbol and update callers.
+static int project_ieee80211_raw_frame_sanity_check(int32_t arg, int32_t arg2, int32_t arg3){
     if (arg == 31337)
       return 1;
     else
@@ -1880,7 +1885,7 @@ extern "C" {
 #endif
 
 void WiFiScan::RunSetup() {
-  if (ieee80211_raw_frame_sanity_check(31337, 0, 0) == 1)
+  if (project_ieee80211_raw_frame_sanity_check(31337, 0, 0) == 1)
     this->wsl_bypass_enabled = true;
   else
     this->wsl_bypass_enabled = false;

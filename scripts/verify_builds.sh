@@ -173,6 +173,7 @@ run_cmd() {
 run_cmd "run_arduino_core_update"
 run_cmd "run_arduino_core_install"
 run_cmd "install_libraries"
+run_cmd "copy_user_setup_to_tft_espi"
 run_cmd "${CMD_COMPILE[*]}"
 
 echo "verify_builds: done (dry_run=$DRY_RUN). To actually run builds, rerun without --dry-run and ensure arduino-cli is installed."

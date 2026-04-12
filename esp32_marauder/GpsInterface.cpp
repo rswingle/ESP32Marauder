@@ -8,7 +8,10 @@ char nmeaBuffer[100];
 
 MicroNMEA nmea(nmeaBuffer, sizeof(nmeaBuffer));
 
-HardwareSerial Serial2(GPS_SERIAL_INDEX);
+// Use the platform-provided Serial2 instance instead of defining a new one here.
+// Defining HardwareSerial Serial2(...) in the project caused a duplicate-symbol
+// linker error on targets where the core already provides Serial2. Removing the
+// local definition ensures we reference the core's Serial2 instance.
 
 static const char *PCAS_SET_115200 = "$PCAS01,5*19\r\n";
 
