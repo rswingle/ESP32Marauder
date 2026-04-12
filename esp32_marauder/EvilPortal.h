@@ -40,7 +40,10 @@ extern Buffer buffer_obj;
 extern char apName[MAX_AP_NAME_SIZE];
 
 #ifndef HAS_PSRAM
-  char index_html[MAX_HTML_SIZE] = "TEST";
+  // Header must not define storage for index_html; multiple .o files including
+  // this header caused duplicate-definition linker errors. Declare extern
+  // here and provide a single definition in EvilPortal.cpp.
+  extern char index_html[];
 #else
   extern char* index_html;
 #endif

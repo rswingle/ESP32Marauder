@@ -3,6 +3,13 @@
 char apName[MAX_AP_NAME_SIZE] = "PORTAL";
 
 #ifdef HAS_PSRAM
+#else
+  // Provide a single definition for non-PSRAM builds. The header declares
+  // `extern char index_html[];` for non-PSRAM cases. Defining storage here
+  // ensures only one translation unit provides the symbol.
+  char index_html[MAX_HTML_SIZE] = "TEST";
+#endif
+#ifdef HAS_PSRAM
   char* index_html = nullptr;
 #endif
 
