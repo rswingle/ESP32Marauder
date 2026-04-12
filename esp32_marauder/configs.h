@@ -245,13 +245,11 @@
   #endif
 
   #if defined(MARAUDER_V6) || defined(MARAUDER_V6_1)
-    // For MARAUDER_V6 we disable touchscreen by default to preserve
-    // button-based navigation and avoid build issues with differing
-    // TFT_eSPI touchscreen APIs across library versions.
-    // If you want touchscreen enabled for this target, re-enable
-    // HAS_TOUCH here after ensuring the TFT_eSPI/XPT2046 library
-    // versions are compatible.
-    //#define HAS_TOUCH
+    // For MARAUDER_V6 we historically disabled touchscreen by default to avoid
+    // TFT_eSPI API mismatches. This change ports touchscreen usage to the
+    // currently-installed TFT_eSPI API so touch can be enabled for V6.
+    // If you need to revert to button-only navigation, undefine HAS_TOUCH.
+    #define HAS_TOUCH
     //#define FLIPPER_ZERO_HAT
     #define HAS_BATTERY
     #define HAS_BT
@@ -276,6 +274,13 @@
     // different backlight pin.
     #ifndef TFT_BL
       #define TFT_BL 32
+    #endif
+    // Ensure the TFT_eSPI Touch extension is compiled for V6 builds by
+    // providing a sensible default touch CS pin. Many board setups in
+    // this repo use 21 for T_CS; owners can override this in their
+    // User_Setup_*.h if their hardware uses a different pin.
+    #ifndef TOUCH_CS
+      #define TOUCH_CS 21
     #endif
   #endif
 
